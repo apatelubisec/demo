@@ -1,0 +1,16 @@
+- name: Gather Cisco device information
+  hosts: cisco_devices
+  gather_facts: no  # We don't need to gather facts from the controller node
+
+  tasks:
+    - name: Get Cisco IOS Facts
+      ios_facts:
+        gather_subset: hardware
+      register: cisco_facts
+
+    - name: Display device information
+      debug:
+        msg: |
+          Hostname: {{ cisco_facts.ansible_net_hostname }}
+          Serial Number: {{ cisco_facts.ansible_net_serialnum }}
+          Model: {{ cisco_facts.ansible_net_model }}
