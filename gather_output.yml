@@ -17,9 +17,3 @@
           IOS Version: {{ cisco_facts.ansible_facts.ansible_net_version | default('N/A') }}
           Interfaces: {{ cisco_facts.ansible_facts.ansible_interfaces | default([]) | join(', ') }}
         dest: /tmp/playbook_output.txt
-
-    - name: Save playbook output to a file
-      copy:
-        src: /tmp/playbook_output.txt
-        dest: /tmp/playbook_output.txt
-        remote_src: no
