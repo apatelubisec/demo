@@ -19,3 +19,4 @@
           - "IOS-XE Version: {{ ansible_net_version }}"
           - "Model: {{ ansible_net_model }}"
           - "Interfaces {{ ansible_network_resources['interfaces'] }}"
+        
