@@ -5,13 +5,10 @@
      connection: network_cli
 
      tasks:
-        - name: show run
+        - name: show version
          ios_command:
-           commands:
-           - show run
-           - show ip route
-           - show ip eigrp neighbors
-           - show version
+           commands: show ver
+          
          register: config
 
        - name: save output to local directory
