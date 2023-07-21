@@ -3,4 +3,6 @@
   gather_facts: no
   tasks:
     - name: Push output file to Git
-      script: /path/to/push_to_git_script.py
+      copy:
+        src: /tmp/playbook_output.txt
+        dest: /path/to/git/repository/playbook_output.txt
