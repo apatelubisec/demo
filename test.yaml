@@ -1,17 +1,20 @@
----
-   - name: capture show output
-     hosts: routers
-     gather_facts: no
-     connection: network_cli
+- name: Initial Playbook
+  hosts: all
+  gather_facts: no
+  connection: network_cli
+  tasks:
+    - name: run sh ver to get model name and serial number
+      ios_command:
+        commands:
+          - show version | include Model
+          - show version | include Serial Number
+      register: sh_ver_result
 
-     tasks:
-        - name: show version
-         ios_command:
-           commands: show ver
-          
-         register: config
+    - name: Extract model name and serial number
+      set_fact:
+        model_name: "{{ sh_ver_result.stdout_lines[0].split(': ')[1] | trim }}"
+        serial_number: "{{ sh_ver_result.stdout_lines[1].split(': ')[1] | trim }}"
 
-       - name: save output to local directory
-         copy:
-           content: "{{ config.stdout | replace('\\n', '\n') }}"           dest: "show-output/{{ inventory_hostname }}.ios"
- ...
+    - name: Debug model name and serial number
+      debug:
+        msg: "Model Name: {{ model_name }}, Serial Number: {{ serial_number }}"
