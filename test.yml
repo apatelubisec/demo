@@ -9,5 +9,4 @@
        gather_subset: all
    - name: Display model and serial number
      debug:
-       msg: "Model number of {{ ansible_net_hostname }} is {{ ansible_net_model }} and serial number is {{ ansible_net_serialnum
-}}"
+       msg: "Model number of {{ ansible_net_hostname }} is {{ ansible_net_model }} and serial number is {{ ansible_net_serialnum }}"
