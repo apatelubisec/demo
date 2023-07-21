@@ -12,8 +12,8 @@
 
     - name: Extract model name and serial number
       set_fact:
-        model_name: "{{ sh_ver_result.stdout_lines[0].split(': ')[1] | trim }}"
-        serial_number: "{{ sh_ver_result.stdout_lines[1].split(': ')[1] | trim }}"
+        model_name: "{{ sh_ver_result.stdout_lines | select('search', 'Model') | first | regex_find('Model\\s+(\\S+)') }}"
+        serial_number: "{{ sh_ver_result.stdout_lines | select('search', 'Serial Number') | first | regex_find('Serial Number\\s+(\\S+)') }}"
 
     - name: Debug model name and serial number
       debug:
