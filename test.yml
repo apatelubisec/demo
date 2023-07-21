@@ -1,7 +1,9 @@
-# Specify Hosts and Connection Type to use
-- hosts: all
-  connection: ansible.netcommon.network_cli
-  gather_facts: no
+---
+- name: Initial Playbook
+    hosts: all
+    gather_facts: no
+    connection: network_cli
+    tasks:
 
   tasks:
     - name: Get IOS Facts
