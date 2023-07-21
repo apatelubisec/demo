@@ -1,8 +1,8 @@
 - name: Push Playbook Output to Git
-  hosts: localhost
+  hosts: all
   gather_facts: no
   tasks:
-    - name: Push output file to Git
+    - name: Push output file to Git repository
       copy:
         src: /tmp/playbook_output.txt
         dest: /path/to/git/repository/playbook_output.txt
