@@ -1,5 +1,5 @@
 - name: Gather Cisco Router and Switch Inventory
-  hosts: routers_and_switches
+  hosts: all
   gather_facts: no
   connection: network_cli
   tasks:
