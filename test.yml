@@ -1,8 +1,13 @@
-- name: Gather facts from Cisco devices
-  hosts: all
-  gather_facts: false
-
+---
+- name: Define Parameters
+  hosts: hosts
+  gather_facts: no
+  connection: network_cli
+  
   tasks:
-    - name: Gather facts from Cisco IOS devices
-      cisco.ios.ios_facts:
-      register: output
+  - name: Get the facts
+    ios_facts:
+      gather_subset: all
+  - name: Display model and serial number
+    debug :
+    msg: "model number of {{ ansible_net_hostname }} is {{ ansible_net_model }} is {{ ansible_net_seiralnum}}"
