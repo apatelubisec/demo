@@ -1,12 +1,19 @@
----
-- name: Define Parameters
-  hosts: XE
+# Specify Hosts and Connection Type to use
+- hosts: all
+  connection: ansible.netcommon.network_cli
   gather_facts: no
-  connection: network_cli
+
   tasks:
-   - name: Get the facts
-     ios_facts:
-       gather_subset: all
-   - name: Display model and serial number
-     debug:
-       msg: "Model number of {{ ansible_net_hostname }} is {{ ansible_net_model }} and serial number is {{ ansible_net_serialnum }}"
+    - name: Get IOS Facts
+      cisco.ios.ios_facts:
+        gather_subset: min
+        gather_network_resources: interfaces
+
+    - name: Display Device Info
+      debug:
+        msg:
+          - "Hostname: {{ ansible_net_hostname }}"
+          - "Serial Number: {{ ansible_net_serialnum }}"
+          - "IOS-XE Version: {{ ansible_net_version }}"
+          - "Model: {{ ansible_net_model }}"
+          - "Interfaces {{ ansible_network_resources['interfaces'] }}"
