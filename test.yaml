@@ -11,8 +11,8 @@
       debug:
         msg: |
           Device: {{ inventory_hostname }}
-          Model Name: {{ cisco_facts.ansible_facts.model | default('N/A') }}
-          Serial Number: {{ cisco_facts.ansible_facts.serialnum | default('N/A') }}
-          Hostname: {{ cisco_facts.ansible_facts.hostname | default('N/A') }}
-          IOS Version: {{ cisco_facts.ansible_facts.version | default('N/A') }}
-          Interfaces: {{ cisco_facts.ansible_facts.interfaces | default([]) | json_query('[*].interface') | join(', ') }}
+          Model Name: {{ cisco_facts.ansible_net_model | default('N/A') }}
+          Serial Number: {{ cisco_facts.ansible_net_serialnum | default('N/A') }}
+          Hostname: {{ cisco_facts.ansible_net_hostname | default('N/A') }}
+          IOS Version: {{ cisco_facts.ansible_net_version | default('N/A') }}
+          Interfaces: {{ cisco_facts.ansible_interfaces | default([]) | join(', ') }}
