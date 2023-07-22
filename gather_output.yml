@@ -17,3 +17,13 @@
           IOS Version: {{ cisco_facts.ansible_facts.ansible_net_version | default('N/A') }}
           Interfaces: {{ cisco_facts.ansible_facts.ansible_interfaces | default([]) | join(', ') }}
         dest: /tmp/playbook_output.txt
+      delegate_to: 127.0.0.1
+      run_once: yes
+
+    - name: Save playbook output to a file on the Ansible Controller
+      fetch:
+        src: /tmp/playbook_output.txt
+        dest: /tmp/playbook_output.txt
+        flat: yes
+      delegate_to: 127.0.0.1
+      run_once: yes
