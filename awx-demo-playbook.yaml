@@ -1,13 +1,59 @@
-- name: cisco_sh_ver
-  hosts: all
-  gather_facts: true 
+---
+- hosts: sw_ios
+  gather_facts: false
+  connection: local
+
   tasks:
-  - name: run show version on remote devices
-    cisco.ios.ios_command:
-     commands:
-     - show version       
-  - name: show run on remote devices
-    become: true
-    cisco.ios.ios_command:
-     commands: 
-     - show run
+    - name: save config
+      ios_command:
+        commands:
+          - write mem
+        timeout: 60
+      vars:
+        ansible_command_timeout: 60
+
+    - name: show run
+      ios_command:
+        commands:
+          - show run | e NVRAM
+        timeout: 60
+      register: shrun
+      vars:
+        ansible_command_timeout: 60
+
+    - name: show vlan
+      ios_command:
+        commands: show vlan
+      register: shvlan
+
+    - name: show inv
+      ios_command:
+        commands: show inventory
+      register: shinv
+
+    - name: show version
+      ios_command:
+        commands: show version | e ptime|restarted
+      register: shver
+
+    - name: show vtp status
+      ios_command:
+        commands: show vtp status
+      register: shvtp
+
+    - blockinfile:
+        block: "{{ item.value }}"
+        dest: "/backups/{{ inventory_hostname }}.txt"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK {{item.variable }}"
+        create: yes
+      with_items:
+        - variable: config
+          value: "{{ shrun.stdout[0] }}"
+        - variable: vlan
+          value: "{{ shvlan.stdout[0] }}"
+        - variable: inventory
+          value: "{{ shinv.stdout[0] }}"
+        - variable: version
+          value: "{{ shver.stdout[0] }}"
+        - variable: vtp
+          value: "{{ shvtp.stdout[0] }}"
