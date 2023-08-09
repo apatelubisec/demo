@@ -1,34 +1,61 @@
 ---
-- name: Upgrade IOS on Cisco Switches
-  hosts: cisco
-  connection: local
+- name: Upgrade Cisco Catalyst 9200 Switches
+  hosts: switches
   gather_facts: no
+  tasks:
+    - name: Copy IOS Image via TFTP
+      ios_command:
+        commands:
+          - copy tftp: flash:
+          - 10.1.196.117
+          - cat9k_lite_iosxe.17.09.03.SPA.bin
 
-  vars:
-    tftp_server: 10.1.196.117
-    ios_image: cat9k_iosxe.17.09.03.SPA.bin
+    - name: Set Boot System
+      ios_command:
+        commands:
+          - config terminal
+          - boot system flash:packages.conf
+          - end
 
-  tasks:  
+    - name: Upgrade IOS XE Image
+      ios_command:
+        commands:
+          - install add file flash:cat9k_lite_iosxe.17.09.03.SPA.bin activate commit
+          - send n
+      ignore_errors: true
 
-  - name: Copy IOS image via TFTP
-    copy:
-      src: "{{ ios_image }}"
-      dest: "/flash:/"
-      host: "{{ tftp_server }}"
+    - name: Wait for Upgrade to Complete
+      pause:
+        seconds: 660
+      # Adjust the duration if necessary based on actual upgrade time
 
-  - name: Set boot variable 
-    ios_system:
-      set_bootvar: flash:packages.conf
+    - name: Save Configuration
+      ios_command:
+        commands:
+          - write memory
 
-  - name: Activate new IOS
-    ios_config:
-      lines:
-        - install add flash:{{ ios_image }} activate commit
-      confirm: yes
+    - name: Reload Switches
+      ios_command:
+        commands:
+          - reload in 5
+      async: 600
+      poll: 0
 
-  - name: Wait for reload
-    wait_for_connection:
-      delay: 120
-      timeout: 300
+    - name: Wait for Switches to Restart
+      wait_for:
+        host: "{{ inventory_hostname }}"
+        port: 22
+        state: started
+        delay: 10
+        timeout: 900
+      delegate_to: localhost
 
-# Rest of playbook...
+    - name: Verify Switches After Upgrade
+      ios_command:
+        commands:
+          - show version
+      register: upgraded_version
+
+    - name: Print Upgraded Version Information
+      debug:
+        var: upgraded_version.stdout_lines
