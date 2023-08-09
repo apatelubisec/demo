@@ -1,40 +1,87 @@
 ---
-- name: Gather Cisco Router and Switch Inventory
-  hosts: all
+- name: 9200 Upgrade
+  hosts: switches
   gather_facts: no
-  connection: network_cli
-  tasks:
-    - name: Collect Cisco facts
-      ansible.builtin.ios_facts:
-      register: cisco_facts
-
-- name: Check IOS version and Copy image if needed
-  hosts: cisco_devices
-  gather_facts: no
-  connection: network_cli
   vars:
-    new_ios_image: "cisco_ios_15.2.7E7.bin"  # The name of the new IOS image file.
-    desired_version: "15.2(7)E7"            # The desired IOS version for the upgrade.
+    new_version: "17.09.03"
+    new_file: "cat9k_lite_iosxe.{{ new_version }}.SPA.bin"
+    tftp_server: "10.1.196.117"
 
   tasks:
-    - name: Check current IOS version
-      set_fact:
-        current_version: "{{ cisco_facts.ansible_facts.net_version }}"
-
-    - name: Compare current version with desired version
-      when: current_version != desired_version
+    - name: Gather facts
+      cisco.ios.ios_facts:
+        gather_subset: hardware
+      register: facts_output
+    
+    - name: Print current version
+      debug:
+        msg: "Current Version is {{ facts_output['ansible_facts']['ansible_net_version'] }}"
+    
+    - name: Start the Upgrade Process
       block:
-        - name: Copy new IOS image to device
-          ios_command:
-            commands:
-              - "copy tftp://{{ ansible_host }}/{{ new_ios_image }} flash:/{{ new_ios_image }}"
-              - "verify /md5 flash:/{{ new_ios_image }}"
-          register: copy_result
+      - name: Check for old files and remove them if found
+        cisco.ios.ios_command:
+          commands:
+            - command: 'install remove inactive'
+              prompt: 
+                - 'Do you want to remove the above files\? \[y/n\]'
+              answer:
+                - 'y'
+        register: install_remove_output
+        vars:
+          ansible_command_timeout: 600
 
-        - name: Compare MD5 hashes
-          assert:
-            that:
-              - copy_result.stdout_lines[-2] | regex_search('.*OK.*')
-            msg: "MD5 mismatch. The copied file is corrupted."
+      - name: Display install_remove output and result
+        debug:
+          msg: "{{ 'No old files found. Nothing to clean.' if 'SUCCESS: No extra package or provisioning files found on media' in install_remove_output.stdout[0] else 'Old files removed successfully.' }}"
+      
+      - name: Copy IOS image via TFTP
+        cisco.ios.ios_command:
+          commands:
+            - command: "copy tftp:{{ tftp_server }}/{{ new_file }} flash:{{ new_file }}"
+              prompt:
+                - 'Address or name of remote host \[\]'
+              answer:
+                - "{{ tftp_server }}"
+                - 'Source filename \[\]'
+              answer:
+                - "{{ new_file }}"
+              prompt:
+                - 'Destination filename \[\]'
+              answer:
+                - "{{ new_file }}"
+        vars:
+          ansible_command_timeout: 900
+      
+      - name: Install and activate new IOS image
+        cisco.ios.ios_command:
+          commands:
+            - command: 'install add file flash:{{ new_file }} activate commit'
+              prompt: 
+                - 'This operation may require a reload of the system. Do you want to proceed\? \[y/n\]'
+              answer: 
+                - 'y'
+        register: install_activate_output
+        vars:
+          ansible_command_timeout: 1200
+      
+      - debug:
+          var: install_activate_output.stdout_lines
 
-      when: current_version != desired_version
+      - name: Wait for switch to reboot and become reachable
+        wait_for_connection:
+          delay: 180
+          sleep: 60
+          timeout: 900
+      
+      - name: Gather new facts
+        cisco.ios.ios_facts:
+          gather_subset: hardware
+        register: facts_output_new
+      
+      - name: Print upgraded version
+        debug:
+          msg: "New Version is {{ facts_output_new['ansible_facts']['ansible_net_version'] }}, Upgrade Successfully Completed"
+        when: new_version == facts_output_new['ansible_facts']['ansible_net_version']
+      
+      when: new_version != facts_output['ansible_facts']['ansible_net_version']
