@@ -13,7 +13,7 @@
       ios_command:
         commands:
           - "copy tftp: flash:"
-          - "10.252.8.103"
+          - "10.1.196.117"
           - "cat9k_lite_iosxe.17.09.03.SPA.bin"
 
     - name: Set Boot System
