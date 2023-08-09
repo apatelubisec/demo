@@ -1,63 +1,48 @@
 ---
-- name: Upgrade Cisco Catalyst 9200 Switch
-  hosts: switches
+- name: Upgrade IOS on Cisco Switches
+  hosts: cisco
+  connection: local
   gather_facts: no
+
+  vars:
+    tftp_server: 10.1.196.117
+    ios_image: cat9k_iosxe.17.09.03.SPA.bin
+
   tasks:
-    - name: Copy IOS Image via TFTP
-      ios_command:
-        commands:
-          - copy tftp: flash:
-          - 10.1.196.117
-          - cat9k_lite_iosxe.17.09.03.SPA.bin
 
-    - name: Set Boot System
-      ios_command:
-        commands:
-          - config terminal
-          - boot system flash:packages.conf
-          - end
+  - name: Remove inactive package (if exists) 
+    ios_config:
+      lines:
+        - install remove inactive
+    ignore_errors: yes
 
-    - name: Install and Activate IOS Image
-      ios_command:
-        commands:
-          - install remove inactive
-          - install add file flash:cat9k_lite_iosxe.17.09.03.SPA.bin activate commit
+  - name: Copy IOS image via TFTP 
+    copy:
+      src: "{{ ios_image }}"
+      dest: flash:
+      host: "{{ tftp_server }}"
 
-    - name: Save Configuration Changes
-      ios_command:
-        commands:
-          - write memory
+  - name: Set boot variable
+    ios_system:
+      set_bootvar: flash:packages.conf
 
-    - name: Reload Switch for Upgrade
-      ios_command:
-        commands:
-          - reload
-      async: 600
-      poll: 0
+  - name: Activate new IOS image
+    ios_config:
+      lines:
+        - install add flash:{{ ios_image }} activate commit
+      confirm: yes
 
-    - name: Wait for Switch to Restart
-      wait_for:
-        host: "{{ inventory_hostname }}"
-        port: 22
-        state: started
-        delay: 10
-        timeout: 300
-      delegate_to: localhost
+  - name: Wait for switch to reload
+    wait_for_connection:
+      delay: 120
+      timeout: 1200  
 
-    - name: Wait 15 Minutes for Upgrade to Complete
-      pause:
-        seconds: 900
+  - name: Verify IOS version
+    ios_command:
+      commands:
+        - show version
+    register: output
 
-    - name: Verify Switch Connectivity
-      wait_for_connection:
-        timeout: 300
-
-    - name: Verify Switch After Upgrade
-      ios_command:
-        commands:
-          - show version
-      register: upgraded_version
-
-    - name: Print Upgraded Version Information
-      debug:
-        var: upgraded_version.stdout_lines
+  - name: Print new IOS version
+    debug:
+      msg: "IOS version upgraded to {{ output.stdout[0] }}"
