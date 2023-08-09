@@ -1,44 +1,39 @@
----
 - hosts: cisco_switches
-  gather_facts: no
-
+  
   vars:
-    old_version: 17.08.01 
+    old_version: 17.08.01
     new_version: 17.09.03
+    tftp_server: 10.1.196.117
     new_ios_image: cat9k_lite_iosxe.17.09.03.SPA.bin
 
   tasks:
 
-  - name: Check current IOS version
-    ios_command:
-      commands: show version
-    register: version_output
-
-  - name: Copy new IOS image to flash
+  - name: Copy new IOS image from TFTP 
     copy:
       src: "{{ new_ios_image }}"
       dest: flash0:/
+      host: "{{ tftp_server }}"
 
-    - name: Set boot variable to new image
+    - name: Set boot variable
       ios_system:
         set_bootvar: "{{ new_ios_image }}"
-      when: "{{ old_version }} in version_output.stdout[0]"
+      when: "{{ old_version }} in {{ inventory_hostname }}"
 
-    - name: Reload switch for upgrade
-      ios_command: 
-        commands: reload
-      when: "{{ old_version }} in version_output.stdout[0]"
+    - name: Reload switch
+      ios_command:
+        commands: 
+          - reload
     
-    - name: Wait for device to reload
+    - name: Wait for reload
       wait_for_connection:
-        delay: 120 
-        sleep: 30
-        timeout: 300
+        delay: 120
+        sleep: 30  
 
-    - name: Verify upgraded version
+    - name: Check new version
       ios_command: 
-        commands: show version
-      register: new_version
+        commands: 
+          - show version
+      register: output
 
     - debug:
-        msg: "IOS upgraded from {{ old_version }} to {{ new_version.stdout[0] }}"
+        msg: "IOS upgraded from {{ old_version }} to {{ output.stdout[0] }}"
