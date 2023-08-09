@@ -1,6 +1,6 @@
 ---
 - name: 9200 Upgrade
-  hosts: all
+  hosts: switches
   gather_facts: no
   vars:
     new_version: "17.09.03"
@@ -36,23 +36,12 @@
           msg: "{{ 'No old files found. Nothing to clean.' if 'SUCCESS: No extra package or provisioning files found on media' in install_remove_output.stdout[0] else 'Old files removed successfully.' }}"
       
       - name: Copy IOS image via TFTP
-        cisco.ios.ios_command:
-          commands:
-            - command: "copy tftp:{{ tftp_server }}/{{ new_file }} flash:{{ new_file }}"
-              prompt:
-                - 'Address or name of remote host \[\]'
-              answer:
-                - "{{ tftp_server }}"
-            - command: 'Source filename \[\]'
-              prompt:
-                - 'Source filename \[\]'
-              answer:
-                - "{{ new_file }}"
-            - command: 'Destination filename \[\]'
-              prompt:
-                - 'Destination filename \[\]'
-              answer:
-                - "{{ new_file }}"
+        expect:
+          command: "copy tftp:{{ tftp_server }}/{{ new_file }} flash:{{ new_file }}"
+          responses:
+            "(Address or name of remote host)": "{{ tftp_server }}"
+            "(Source filename)": "{{ new_file }}"
+            "(Destination filename)": ""
         vars:
           ansible_command_timeout: 900
       
