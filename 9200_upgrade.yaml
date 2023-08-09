@@ -20,6 +20,7 @@
     - name: Install and Activate IOS Image
       ios_command:
         commands:
+          - install remove inactive
           - install add file flash:cat9k_lite_iosxe.17.09.03.SPA.bin activate commit
 
     - name: Save Configuration Changes
@@ -43,6 +44,10 @@
         timeout: 300
       delegate_to: localhost
 
+    - name: Wait 15 Minutes for Upgrade to Complete
+      pause:
+        seconds: 900
+
     - name: Verify Switch Connectivity
       wait_for_connection:
         timeout: 300
@@ -52,7 +57,6 @@
         commands:
           - show version
       register: upgraded_version
-      
 
     - name: Print Upgraded Version Information
       debug:
