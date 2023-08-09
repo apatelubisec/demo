@@ -6,22 +6,22 @@
     - name: Copy IOS Image via TFTP
       ios_command:
         commands:
-          - copy tftp: flash:
-          - 10.1.196.117
-          - cat9k_lite_iosxe.17.09.03.SPA.bin
+          - "copy tftp: flash:"
+          - "10.1.196.117"
+          - "cat9k_lite_iosxe.17.09.03.SPA.bin"
 
     - name: Set Boot System
       ios_command:
         commands:
-          - config terminal
-          - boot system flash:packages.conf
-          - end
+          - "config terminal"
+          - "boot system flash:packages.conf"
+          - "end"
 
     - name: Upgrade IOS XE Image
       ios_command:
         commands:
-          - install add file flash:cat9k_lite_iosxe.17.09.03.SPA.bin activate commit
-          - send n
+          - "install add file flash:cat9k_lite_iosxe.17.09.03.SPA.bin activate commit"
+          - "send n"
       ignore_errors: true
 
     - name: Wait for Upgrade to Complete
@@ -32,12 +32,12 @@
     - name: Save Configuration
       ios_command:
         commands:
-          - write memory
+          - "write memory"
 
     - name: Reload Switches
       ios_command:
         commands:
-          - reload in 5
+          - "reload in 5"
       async: 600
       poll: 0
 
@@ -53,7 +53,7 @@
     - name: Verify Switches After Upgrade
       ios_command:
         commands:
-          - show version
+          - "show version"
       register: upgraded_version
 
     - name: Print Upgraded Version Information
