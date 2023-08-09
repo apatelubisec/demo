@@ -1,36 +1,31 @@
 ---
-- name: Gather Cisco Router and Switch Inventory
-  hosts: all
-  gather_facts: no
-  connection: network_cli
-  tasks:
-    - name: Collect Cisco facts
-      ansible.builtin.ios_facts:
-      register: cisco_facts
-
-- name: Check IOS version and Upgrade IOS XE if needed
+- name: Upgrade Cisco Catalyst Switches IOS XE
   hosts: cisco_devices
   gather_facts: no
   connection: network_cli
+
+  vars:
+    new_ios_image: "cat9k_lite_iosxe.17.09.03.SPA.bin"  # The name of the new IOS XE image file.
+
   tasks:
-    - name: Copy IOS Image via TFTP
+    - name: Copy IOS XE Image via TFTP
       ios_command:
         commands:
           - "copy tftp: flash:"
           - "10.1.196.117"
-          - "cat9k_lite_iosxe.17.09.03.SPA.bin"
+          - "{{ new_ios_image }}"
 
     - name: Set Boot System
       ios_command:
         commands:
           - "config terminal"
-          - "boot system flash:packages.conf"
+          - "boot system flash:{{ new_ios_image }}"
           - "end"
 
     - name: Upgrade IOS XE Image
       ios_command:
         commands:
-          - "install add file flash:cat9k_lite_iosxe.17.09.03.SPA.bin activate commit"
+          - "install add file flash:{{ new_ios_image }} activate commit"
           - "send n"
       ignore_errors: true
 
@@ -60,7 +55,7 @@
         timeout: 900
       delegate_to: localhost
 
-    - name: Verify Switches After Upgrade
+    - name: Verify Upgraded IOS XE Version
       ios_command:
         commands:
           - "show version"
