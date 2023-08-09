@@ -39,9 +39,14 @@
       - name: Copy IOS image via TFTP
         cisco.ios.ios_command:
           commands:
-            - command: "copy tftp://{{ tftp_server }}/{{ new_image }} flash:/{{ new_file }}"
+            - "copy tftp://{{ tftp_server }}/{{ new_image }} flash:/{{ new_file }}"
+            - "Address or name of remote host []?"
+            - "{{ tftp_server }}"
+            - "Source filename []?"
+            - "{{ new_image }}"
+            - "Destination filename []?"
         vars:
-          ansible_command_timeout: 900
+          ansible_command_timeout: 120
       
       - name: Install and activate new IOS image
         cisco.ios.ios_command:
