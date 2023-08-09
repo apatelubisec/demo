@@ -8,11 +8,11 @@
       ansible.builtin.ios_facts:
       register: cisco_facts
 
-- name: Check IOS version and Copy image if needed
+- name: Check IOS version and Upgrade IOS XE if needed
   hosts: cisco_devices
   gather_facts: no
   connection: network_cli
-
+  tasks:
     - name: Copy IOS Image via TFTP
       ios_command:
         commands:
@@ -67,5 +67,5 @@
       register: upgraded_version
 
     - name: Print Upgraded Version Information
-      debug:
+      ansible.builtin.debug:
         var: upgraded_version.stdout_lines
