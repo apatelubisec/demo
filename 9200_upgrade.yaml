@@ -1,13 +1,19 @@
 ---
-- name: Upgrade Cisco Catalyst 9200 Switches
-  hosts: switches
-  gather_facts: no
+- name: Gather Cisco device information and Upgrade IOS XE
+  hosts: cisco_devices
+  gather_facts: no  # We don't need to gather facts from the controller node
+
   tasks:
+    - name: Get Cisco IOS Facts
+      ios_facts:
+        gather_subset: hardware
+      register: cisco_facts
+
     - name: Copy IOS Image via TFTP
       ios_command:
         commands:
           - "copy tftp: flash:"
-          - "10.1.196.117"
+          - "10.252.8.103"
           - "cat9k_lite_iosxe.17.09.03.SPA.bin"
 
     - name: Set Boot System
