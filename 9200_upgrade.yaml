@@ -45,6 +45,7 @@
             - "Source filename []?"
             - "{{ new_image }}"
             - "Destination filename []?"
+            - "{{ new_image }}"
         vars:
           ansible_command_timeout: 120
       
