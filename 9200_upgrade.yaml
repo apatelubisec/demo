@@ -1,13 +1,17 @@
 ---
-- name: Gather Cisco device information and Upgrade IOS XE
-  hosts: cisco_devices
-  gather_facts: no  # We don't need to gather facts from the controller node
-
+- name: Gather Cisco Router and Switch Inventory
+  hosts: all
+  gather_facts: no
+  connection: network_cli
   tasks:
-    - name: Get Cisco IOS Facts
-      ios_facts:
-        gather_subset: hardware
+    - name: Collect Cisco facts
+      ansible.builtin.ios_facts:
       register: cisco_facts
+
+- name: Check IOS version and Copy image if needed
+  hosts: cisco_devices
+  gather_facts: no
+  connection: network_cli
 
     - name: Copy IOS Image via TFTP
       ios_command:
