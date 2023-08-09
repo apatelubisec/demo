@@ -1,43 +1,38 @@
 ---
-- name: Upgrade IOS XE 
+- name: Upgrade IOS XE
   hosts: all
   gather_facts: no
 
-  tasks:
+  vars:
+    tftp_server: 10.1.196.117
+    new_image: cat9k_lite_iosxe.17.09.03.SPA.bin
 
-  - name: Remove inactive packages
-    ios_config:
-      lines:
-        - install remove inactive
+  tasks:
 
   - name: Copy new image via TFTP
     ios_copy:
-      src: 10.1.196.117/cat9k_iosxe.17.09.03.SPA.bin
-      dest: flash:cat9k_iosxe.17.09.03.SPA.bin
+      src: "{{ tftp_server }}/{{ new_image }}"
+      dest: "{{ new_image }}"
       protocol: tftp
 
   - name: Set boot variable
     ios_system:
       set_bootvar: flash:packages.conf
 
-  - name: Activate new image 
+  - name: Activate new image
     ios_config:
       lines:
-        - install add flash:cat9k_iosxe.17.09.03.SPA.bin activate commit
+        - install add flash:{{ new_image }} activate commit
 
   - name: Wait for switch to reload
     wait_for_connection:
       timeout: 600
 
-- name: Verify upgrade
-  gather_facts: no
-  tasks:
-
-  - name: Check new IOS XE version
-    ios_command: 
+  - name: Check new version
+    ios_command:
       commands:
         - show version
     register: output
-
+  
   - debug:
-      msg: "Upgraded to {{ output.stdout[0] }}"
+      msg: "Upgraded IOS XE to {{ output.stdout[0] }}"
