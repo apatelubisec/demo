@@ -1,39 +1,58 @@
-- hosts: cisco_switches
-  
-  vars:
-    old_version: 17.08.01
-    new_version: 17.09.03
-    tftp_server: 10.1.196.117
-    new_ios_image: cat9k_lite_iosxe.17.09.03.SPA.bin
-
+---
+- name: Upgrade Cisco Catalyst 9200 Switch
+  hosts: switches
+  gather_facts: no
   tasks:
-
-  - name: Copy new IOS image from TFTP 
-    copy:
-      src: "{{ new_ios_image }}"
-      dest: flash0:/
-      host: "{{ tftp_server }}"
-
-    - name: Set boot variable
-      ios_system:
-        set_bootvar: "{{ new_ios_image }}"
-      when: "{{ old_version }} in {{ inventory_hostname }}"
-
-    - name: Reload switch
+    - name: Copy IOS Image via TFTP
       ios_command:
-        commands: 
+        commands:
+          - copy tftp: flash:
+          - 10.1.196.117
+          - cat9k_lite_iosxe.17.09.03.SPA.bin
+
+    - name: Set Boot System
+      ios_command:
+        commands:
+          - config terminal
+          - boot system flash:packages.conf
+          - end
+
+    - name: Install and Activate IOS Image
+      ios_command:
+        commands:
+          - install add file flash:cat9k_lite_iosxe.17.09.03.SPA.bin activate commit
+
+    - name: Save Configuration Changes
+      ios_command:
+        commands:
+          - write memory
+
+    - name: Reload Switch for Upgrade
+      ios_command:
+        commands:
           - reload
-    
-    - name: Wait for reload
+      async: 600
+      poll: 0
+
+    - name: Wait for Switch to Restart
+      wait_for:
+        host: "{{ inventory_hostname }}"
+        port: 22
+        state: started
+        delay: 10
+        timeout: 300
+      delegate_to: localhost
+
+    - name: Verify Switch Connectivity
       wait_for_connection:
-        delay: 120
-        sleep: 30  
+        timeout: 300
 
-    - name: Check new version
-      ios_command: 
-        commands: 
+    - name: Verify Switch After Upgrade
+      ios_command:
+        commands:
           - show version
-      register: output
+      register: upgraded_version
 
-    - debug:
-        msg: "IOS upgraded from {{ old_version }} to {{ output.stdout[0] }}"
+    - name: Print Upgraded Version Information
+      debug:
+        var: upgraded_version.stdout_lines
