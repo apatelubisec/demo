@@ -8,41 +8,27 @@
     tftp_server: 10.1.196.117
     ios_image: cat9k_iosxe.17.09.03.SPA.bin
 
-  tasks:
+  tasks:  
 
-  - name: Remove inactive package (if exists) 
-    ios_config:
-      lines:
-        - install remove inactive
-    ignore_errors: yes
-
-  - name: Copy IOS image via TFTP 
+  - name: Copy IOS image via TFTP
     copy:
       src: "{{ ios_image }}"
-      dest: flash:
+      dest: "/flash:/"
       host: "{{ tftp_server }}"
 
-  - name: Set boot variable
+  - name: Set boot variable 
     ios_system:
       set_bootvar: flash:packages.conf
 
-  - name: Activate new IOS image
+  - name: Activate new IOS
     ios_config:
       lines:
         - install add flash:{{ ios_image }} activate commit
       confirm: yes
 
-  - name: Wait for switch to reload
+  - name: Wait for reload
     wait_for_connection:
       delay: 120
-      timeout: 1200  
+      timeout: 300
 
-  - name: Verify IOS version
-    ios_command:
-      commands:
-        - show version
-    register: output
-
-  - name: Print new IOS version
-    debug:
-      msg: "IOS version upgraded to {{ output.stdout[0] }}"
+# Rest of playbook...
