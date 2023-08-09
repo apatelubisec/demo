@@ -1,66 +1,56 @@
 ---
-- name: Upgrade Cisco Catalyst Switches IOS XE
-  hosts: cisco_devices
+- name: Check IOS XE version
+  hosts: cisco_switches
   gather_facts: no
-  connection: network_cli
-
-  vars:
-    new_ios_image: "cat9k_lite_iosxe.17.09.03.SPA.bin"  # The name of the new IOS XE image file.
 
   tasks:
-    - name: Copy IOS XE Image via TFTP
-      ios_command:
-        commands:
-          - "copy tftp: flash:"
-          - "10.1.196.117"
-          - "{{ new_ios_image }}"
 
-    - name: Set Boot System
-      ios_command:
-        commands:
-          - "config terminal"
-          - "boot system flash:{{ new_ios_image }}"
-          - "end"
+  - name: Get current version
+    ios_command:
+      commands:
+        - show version
+    register: version_output
 
-    - name: Upgrade IOS XE Image
-      ios_command:
-        commands:
-          - "install add file flash:{{ new_ios_image }} activate commit"
-          - "send n"
-      ignore_errors: true
+- name: Upgrade IOS XE
+  hosts: cisco_switches
+  gather_facts: no
 
-    - name: Wait for Upgrade to Complete
-      pause:
-        seconds: 660
-      # Adjust the duration if necessary based on actual upgrade time
+  vars:
+    - tftp_server: 10.1.196.117
+    - new_image: cat9k_lite_iosxe.17.09.03.SPA.bin
 
-    - name: Save Configuration
-      ios_command:
-        commands:
-          - "write memory"
+  tasks:
 
-    - name: Reload Switches
-      ios_command:
-        commands:
-          - "reload in 5"
-      async: 600
-      poll: 0
+  - name: Remove inactive package
+    ios_config:
+      lines:
+        - install remove inactive
 
-    - name: Wait for Switches to Restart
-      wait_for:
-        host: "{{ inventory_hostname }}"
-        port: 22
-        state: started
-        delay: 10
-        timeout: 900
-      delegate_to: localhost
+  - name: Copy new image via TFTP 
+    copy:
+      src: "{{ new_image }}"
+      dest: flash:
+      host: "{{ tftp_server }}"
 
-    - name: Verify Upgraded IOS XE Version
-      ios_command:
-        commands:
-          - "show version"
-      register: upgraded_version
+  - name: Set boot variable
+    ios_system:
+      set_bootvar: flash:packages.conf
 
-    - name: Print Upgraded Version Information
-      ansible.builtin.debug:
-        var: upgraded_version.stdout_lines
+  - name: Activate new image
+    ios_config:
+      lines:
+        - install add flash:{{ new_image }} activate commit
+  
+  - name: Wait for switch to reload
+    wait_for_connection:
+      delay: 120
+      timeout: 600
+      
+  - name: Check new version
+    ios_command:
+      commands:
+        - show version
+    register: new_version_output
+
+  - debug:
+      msg: "{{ new_version_output.stdout_lines[0] }}"
