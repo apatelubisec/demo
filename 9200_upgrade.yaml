@@ -1,56 +1,90 @@
 ---
-- name: Check IOS XE version
-  hosts: cisco_switches
+- name: 9200 Upgrade
+  hosts: switches
   gather_facts: no
-
-  tasks:
-
-  - name: Get current version
-    ios_command:
-      commands:
-        - show version
-    register: version_output
-
-- name: Upgrade IOS XE
-  hosts: cisco_switches
-  gather_facts: no
-
   vars:
-    - tftp_server: 10.1.196.117
-    - new_image: cat9k_lite_iosxe.17.09.03.SPA.bin
+    new_version: "17.09.03"
+    new_file: "cat9k_lite_iosxe.{{ new_version }}.SPA.bin"
+    tftp_server: "10.1.196.117"
 
   tasks:
+    - name: Gather facts
+      cisco.ios.ios_facts:
+        gather_subset: hardware
+      register: facts_output
+    
+    - name: Print current version
+      debug:
+        msg: "Current Version is {{ facts_output['ansible_facts']['ansible_net_version'] }}"
+    
+    - name: Start the Upgrade Process
+      block:
+      - name: Check for old files and remove them if found
+        cisco.ios.ios_command:
+          commands:
+            - command: 'install remove inactive'
+              prompt: 
+                - 'Do you want to remove the above files\? \[y/n\]'
+              answer:
+                - 'y'
+        register: install_remove_output
+        vars:
+          ansible_command_timeout: 600
 
-  - name: Remove inactive package
-    ios_config:
-      lines:
-        - install remove inactive
-
-  - name: Copy new image via TFTP 
-    copy:
-      src: "{{ new_image }}"
-      dest: flash:
-      host: "{{ tftp_server }}"
-
-  - name: Set boot variable
-    ios_system:
-      set_bootvar: flash:packages.conf
-
-  - name: Activate new image
-    ios_config:
-      lines:
-        - install add flash:{{ new_image }} activate commit
-  
-  - name: Wait for switch to reload
-    wait_for_connection:
-      delay: 120
-      timeout: 600
+      - name: Display install_remove output and result
+        debug:
+          msg: "{{ 'No old files found. Nothing to clean.' if 'SUCCESS: No extra package or provisioning files found on media' in install_remove_output.stdout[0] else 'Old files removed successfully.' }}"
       
-  - name: Check new version
-    ios_command:
-      commands:
-        - show version
-    register: new_version_output
+      - name: Copy IOS image via TFTP
+        cisco.ios.ios_command:
+          commands:
+            - command: "copy tftp:{{ tftp_server }}/{{ new_file }} flash:{{ new_file }}"
+              prompt:
+                - 'Address or name of remote host \[\]'
+              answer:
+                - "{{ tftp_server }}"
+            - command: 'Source filename \[\]'
+              prompt:
+                - 'Source filename \[\]'
+              answer:
+                - "{{ new_file }}"
+            - command: 'Destination filename \[\]'
+              prompt:
+                - 'Destination filename \[\]'
+              answer:
+                - "{{ new_file }}"
+        vars:
+          ansible_command_timeout: 900
+      
+      - name: Install and activate new IOS image
+        cisco.ios.ios_command:
+          commands:
+            - command: 'install add file flash:{{ new_file }} activate commit'
+              prompt: 
+                - 'This operation may require a reload of the system. Do you want to proceed\? \[y/n\]'
+              answer: 
+                - 'y'
+        register: install_activate_output
+        vars:
+          ansible_command_timeout: 1200
+      
+      - debug:
+          var: install_activate_output.stdout_lines
 
-  - debug:
-      msg: "{{ new_version_output.stdout_lines[0] }}"
+      - name: Wait for switch to reboot and become reachable
+        wait_for_connection:
+          delay: 180
+          sleep: 60
+          timeout: 900
+      
+      - name: Gather new facts
+        cisco.ios.ios_facts:
+          gather_subset: hardware
+        register: facts_output_new
+      
+      - name: Print upgraded version
+        debug:
+          msg: "New Version is {{ facts_output_new['ansible_facts']['ansible_net_version'] }}, Upgrade Successfully Completed"
+        when: new_version == facts_output_new['ansible_facts']['ansible_net_version']
+      
+      when: new_version != facts_output['ansible_facts']['ansible_net_version']
