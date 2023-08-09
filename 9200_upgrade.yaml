@@ -1,6 +1,6 @@
 ---
 - name: 9200 Upgrade
-  hosts: switches
+  hosts: all
   gather_facts: no
   vars:
     new_version: "17.09.03"
