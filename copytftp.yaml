@@ -1,8 +1,21 @@
-- name: Copy IOS image
-  cisco.ios.ios_command:
-    commands:
-      - "copy tftp://{{ tftp_server }}/{{ image_filename }} flash:/{{ image_filename }}"
-      - "Destination filename [{{ image_filename }}]?"
-  register: copy_output
+---
+- name: Copy IOS Image via TFTP
+  hosts: all
+  gather_facts: no
   vars:
-    ansible_command_timeout: 120  # Increase the timeout value (in seconds)
+    tftp_server: "10.1.196.117"
+    image_filename: "cat9k_lite_iosxe.17.09.03.SPA.bin"
+
+  tasks:
+    - name: Copy IOS image
+      cisco.ios.ios_command:
+        commands:
+          - "copy tftp://{{ tftp_server }}/{{ image_filename }} flash:/{{ image_filename }}"
+          - "Destination filename [{{ image_filename }}]?"
+      register: copy_output
+      vars:
+        ansible_command_timeout: 120  # Increase the timeout value (in seconds)
+
+    - name: Display copy output
+      debug:
+        var: copy_output.stdout_lines
