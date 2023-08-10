@@ -1,32 +1,23 @@
 ---
-- name: Copy IOS XE image via TFTP
-  hosts: all  # Update to match your host/group
+- name: Copy and Upgrade IOS XE Image
+  hosts: all
   gather_facts: no
 
   vars:
     tftp_server: "10.1.196.117"
-    ios_image_filename: "cat9k_lite_iosxe.17.09.03.SPA.bin"
+    new_file: "cat9k_lite_iosxe.17.09.03.SPA.bin"
 
   tasks:
     - name: Copy IOS XE image via TFTP
       cisco.ios.ios_command:
         commands:
-          - "copy tftp://{{ tftp_server }}/{{ ios_image_filename }} flash:/{{ ios_image_filename }}"
-        prompt:
-          - "Destination filename [{{ ios_image_filename }}]?"
-        answer:
-          - "\r"  # Press Enter to confirm the filename
-      register: copy_result
-      ignore_errors: yes
-      timeout: 120
-
-    - name: Print copy result
-      debug:
-        var: copy_result.stdout_lines
+          - "copy tftp://{{ tftp_server }}/{{ new_file }} flash:/{{ new_file }}"
+        wait_for:
+          - "Address or name of remote host []?"
+          - "Source filename []?"
+          - "Destination filename [{{ new_file }}]?"
 
     - name: Save Configuration
       cisco.ios.ios_command:
         commands:
           - "write memory"
-      ignore_errors: yes
-      timeout: 30
