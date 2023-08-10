@@ -1,6 +1,6 @@
 ---
 - name: Copy IOS XE image to switch
-  hosts: all  # Specify the target hosts here
+  hosts: switches  # Specify the target hosts here
   gather_facts: no
   vars:
     tftp_server: 10.1.196.117  # TFTP server IP address
@@ -8,11 +8,12 @@
 
   tasks:
     - name: Copy IOS XE image via TFTP
-      ios_command_string:
+      ios_command:
         commands:
           - "copy tftp://{{ tftp_server }}/{{ ios_image_filename }} flash:/{{ ios_image_filename }}"
-          - "Address or name of remote host []?"
-          - "{{ tftp_server }}"
-          - "Source filename []?"
-          - "{{ ios_image_filename }}"
-          - "Destination filename [{{ ios_image_filename }}]?"
+      register: copy_result
+      ignore_errors: yes
+
+    - name: Print copy result
+      debug:
+        var: copy_result.stdout_lines
