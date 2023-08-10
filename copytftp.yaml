@@ -1,6 +1,6 @@
 ---
 - name: Copy IOS Image via TFTP
-  hosts: switches
+  hosts: all
   gather_facts: no
   vars:
     tftp_server: "10.1.196.117"
