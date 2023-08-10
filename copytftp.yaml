@@ -9,12 +9,14 @@
 
   tasks:
     - name: Copy IOS image via TFTP
-      expect:
-        command: "copy tftp://{{ tftp_server }}/{{ new_image }} flash:/{{ new_file }}"
-        responses:
-          "(Address or name of remote host)": "{{ tftp_server }}"
-          "(Source filename)": "{{ new_image }}"
-          "(Destination filename)": "{{ new_file }}"
+      cisco.ios.ios_command:
+        commands:
+          - "copy tftp://{{ tftp_server }}/{{ new_image }} flash:/{{ new_file }}"
+          - "Address or name of remote host []?"
+          - "{{ tftp_server }}"
+          - "Source filename []?"
+          - "{{ new_image }}"
+          - "Destination filename [{{ new_file }}]?"
       register: copy_output
       vars:
         ansible_command_timeout: 120
