@@ -1,23 +1,18 @@
 ---
-- name: Copy IOS Image via TFTP
-  hosts: all
+- name: Copy IOS XE image to switch
+  hosts: all  # Specify the target hosts here
   gather_facts: no
   vars:
-    tftp_server: "10.1.196.117"
-    new_image: "cat9k_lite_iosxe.17.09.03.SPA.bin"
-    new_file: "cat9k_lite_iosxe.17.09.03.SPA.bin"
+    tftp_server: 10.1.196.117  # TFTP server IP address
+    ios_image_filename: cat9k_lite_iosxe.17.09.03.SPA.bin  # The name of the IOS XE image file
 
   tasks:
-    - name: Copy IOS image via TFTP
-      expect:
-        command: "copy tftp://{{ tftp_server }}/{{ new_image }} flash:/{{ new_file }}"
-        responses:
-          "Address or name of remote host []?": "{{ tftp_server }}"
-          "Source filename []?": "{{ new_image }}"
-          "Destination filename []?": "{{ new_file }}"
-        timeout: 300
-      register: copy_output
-
-    - name: Display copy output
-      debug:
-        var: copy_output.stdout_lines
+    - name: Copy IOS XE image via TFTP
+      ios_command_string:
+        commands:
+          - "copy tftp://{{ tftp_server }}/{{ ios_image_filename }} flash:/{{ ios_image_filename }}"
+          - "Address or name of remote host []?"
+          - "{{ tftp_server }}"
+          - "Source filename []?"
+          - "{{ ios_image_filename }}"
+          - "Destination filename [{{ ios_image_filename }}]?"
