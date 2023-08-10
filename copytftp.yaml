@@ -1,36 +1,23 @@
----
-- name: Copy IOS XE image via TFTP
+- name: Copy IOS XE Image via TFTP
   hosts: all
-  gather_facts: no
+
   vars:
     tftp_server: 10.1.196.117
-    new_image: cat9k_lite_iosxe.17.09.03.SPA.bin
-    new_file: cat9k_lite_iosxe.17.09.03.SPA.bin
-    local_download_path: "/tmp/{{ new_file }}"
+    src_image: cat9k_lite_iosxe.17.09.03.SPA.bin
+    dest_path: flash:/
 
   tasks:
-    - name: Download IOS image from TFTP server
-      get_url:
-        url: "tftp://{{ tftp_server }}/{{ new_image }}"
-        dest: "{{ local_download_path }}"
-      delegate_to: localhost
 
-    - name: Copy downloaded IOS image to target host
-      copy:
-        src: "{{ local_download_path }}"
-        dest: "/bootflash/{{ new_file }}"
-      when: inventory_hostname == "10.1.196.103"
+  - name: Check current IOS version
+    ios_command:
+      commands:
+        - show version
+    register: version_output
 
-    - name: Wait for TFTP transfer to complete
-      pause:
-        seconds: 30
+  - name: Copy new IOS image via TFTP
+    ios_copy:
+      src: "{{ tftp_server }}/{{ src_image }}"  
+      dest: "{{ inventory_hostname }}:{{ dest_path }}"
+    
 
-    - name: Save the configuration
-      cisco.ios.ios_command:
-        commands:
-          - "write memory"
-      register: save_result
-
-    - name: Print save result
-      debug:
-        var: save_result
+ 
