@@ -52,7 +52,7 @@
       - name: Copy IOS image via FTP
         cisco.ios.ios_command:
           commands:
-            - command: "copy ftp://{{ ftp_username }}:{{ ftp_password }}@{{ ftp_ip }}/{{ new_file }} flash:{{ new_file }} vrf Mgmt-vrf"
+            - command: "copy ftp://{{ ftp_username }}:{{ ftp_password }}@{{ ftp_ip }}/{{ new_file }} flash:{{ new_file }}"
               prompt:
                 - 'Destination filename [{{ new_file }}]?'
               answer:
