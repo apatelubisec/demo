@@ -1,23 +1,19 @@
 - name: Copy IOS XE Image via TFTP
   hosts: all
-
-  vars:
-    tftp_server: 10.1.196.117
-    src_image: cat9k_lite_iosxe.17.09.03.SPA.bin
-    dest_path: flash:/
+  gather_facts: no
 
   tasks:
+    # ... (other tasks)
 
-  - name: Check current IOS version
-    ios_command:
-      commands:
-        - show version
-    register: version_output
-
-  - name: Copy new IOS image via TFTP
-    ios_copy:
-      src: "{{ tftp_server }}/{{ src_image }}"  
-      dest: "{{ inventory_hostname }}:{{ dest_path }}"
-    
+    - name: Copy IOS image via FTP
+      cisco.ios.ios_command:
+        commands:
+          - command: "copy ftp://cisco:cisco123@10.1.196.117/cat9k_lite_iosxe.17.09.03.SPA.bin flash:cat9k_lite_iosxe.17.09.03.SPA.bin"
+            prompt:
+              - 'Destination filename [cat9k_lite_iosxe.17.09.03.SPA.bin]?'
+            answer:
+              - "\r"
+      vars:
+        ansible_command_timeout: 900
 
  
