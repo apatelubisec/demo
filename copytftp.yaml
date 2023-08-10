@@ -1,6 +1,6 @@
 ---
 - name: Copy IOS XE image to switch
-  hosts: switches  # Specify the target hosts here
+  hosts: all  # Specify the target hosts here
   gather_facts: no
   vars:
     tftp_server: 10.1.196.117  # TFTP server IP address
