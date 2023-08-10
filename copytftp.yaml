@@ -12,7 +12,7 @@
       expect:
         command: "copy tftp://{{ tftp_server }}/{{ new_image }} flash:/{{ new_file }}"
         responses:
-          "Destination filename \[{{ new_file }}\]?": "\r"
+          "Destination filename \\[{{ new_file }}\\]?": "\r"
       register: copy_result
       environment:
         ansible_command_timeout: 120
