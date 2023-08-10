@@ -6,18 +6,21 @@
     tftp_server: 10.1.196.117
     new_image: cat9k_lite_iosxe.17.09.03.SPA.bin
     new_file: cat9k_lite_iosxe.17.09.03.SPA.bin
+    local_download_path: "/tmp/{{ new_file }}"
 
   tasks:
-    - name: Copy IOS image via TFTP
-      copy:
-        src: "tftp://{{ tftp_server }}/{{ new_image }}"
-        dest: "/bootflash/{{ new_file }}"
-        remote_src: yes
-      register: copy_result
+    - name: Fetch IOS image from TFTP server
+      fetch:
+        src: "{{ new_image }}"
+        dest: "{{ local_download_path }}"
+        flat: yes
+      delegate_to: localhost
 
-    - name: Print copy result
-      debug:
-        var: copy_result
+    - name: Copy fetched IOS image to target host
+      copy:
+        src: "{{ local_download_path }}"
+        dest: "/bootflash/{{ new_file }}"
+      when: inventory_hostname == "10.1.196.103"
 
     - name: Wait for TFTP transfer to complete
       pause:
