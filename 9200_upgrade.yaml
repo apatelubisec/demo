@@ -3,7 +3,7 @@
   hosts: all
   gather_facts: no
   vars:
-    new_version: 17.06.05
+    new_version: 17.09.03
     new_file: "cat9k_iosxe.{{ new_version }}.SPA.bin"
     ftp_username: cisco
     ftp_password: cisco123
