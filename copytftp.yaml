@@ -1,6 +1,6 @@
 ---
 - name: Copy IOS Image via TFTP
-  hosts: all
+  hosts: switches
   gather_facts: no
   vars:
     tftp_server: "10.1.196.117"
@@ -9,12 +9,14 @@
 
   tasks:
     - name: Copy IOS image via TFTP
-      cisco.ios.ios_command_string:
-        commands: "copy tftp://{{ tftp_server }}/{{ new_image }} flash:/{{ new_file }}\r\n"
-        wait_for: "Destination filename [{{ new_file }}]?"
+      expect:
+        command: "copy tftp://{{ tftp_server }}/{{ new_image }} flash:/{{ new_file }}"
+        responses:
+          "Address or name of remote host []?": "{{ tftp_server }}"
+          "Source filename []?": "{{ new_image }}"
+          "Destination filename []?": "{{ new_file }}"
+        timeout: 300
       register: copy_output
-      vars:
-        ansible_command_timeout: 120
 
     - name: Display copy output
       debug:
