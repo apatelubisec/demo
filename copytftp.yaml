@@ -12,8 +12,9 @@
       cisco.ios.ios_command:
         commands:
           - "copy tftp://{{ tftp_server }}/{{ new_image }} flash:/{{ new_file }}"
-        prompt: "Destination filename \\[{{ new_file }}\\]?"
       register: copy_result
+      wait_for:
+        - result[0] contains "Destination filename [{{ new_file }}]?"
       vars:
         ansible_command_timeout: 120
 
