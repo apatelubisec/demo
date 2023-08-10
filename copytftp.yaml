@@ -9,13 +9,11 @@
 
   tasks:
     - name: Copy IOS image via TFTP
-      expect:
-        command: "copy tftp://{{ tftp_server }}/{{ new_image }} flash:/{{ new_file }}"
-        responses:
-          "Destination filename \\[{{ new_file }}\\]?": "\r"
+      copy:
+        src: "tftp://{{ tftp_server }}/{{ new_image }}"
+        dest: "/bootflash/{{ new_file }}"
+        remote_src: yes
       register: copy_result
-      environment:
-        ansible_command_timeout: 120
 
     - name: Print copy result
       debug:
