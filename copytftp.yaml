@@ -4,21 +4,20 @@
   gather_facts: no
   vars:
     tftp_server: "10.1.196.117"
-    image_filename: "cat9k_lite_iosxe.17.09.03.SPA.bin"
+    new_image: "cat9k_lite_iosxe.17.09.03.SPA.bin"
+    new_file: "cat9k_lite_iosxe.17.09.03.SPA.bin"
 
   tasks:
-    - name: Copy new image via TFTP
-  ios_command:
-    commands:
-
-      - command: copy tftp://10.1.196.117/cat9k_lite_iosxe.17.09.03.SPA.bin flash:/cat9k_lite_iosxe.17.09.03.SPA.bin
-        sendonly: true
-
-      - command: ''
-        sendonly: true
-        
-      - command: ''
-        sendonly: true
+    - name: Copy IOS image via TFTP
+      expect:
+        command: "copy tftp://{{ tftp_server }}/{{ new_image }} flash:/{{ new_file }}"
+        responses:
+          "(Address or name of remote host)": "{{ tftp_server }}"
+          "(Source filename)": "{{ new_image }}"
+          "(Destination filename)": "{{ new_file }}"
+      register: copy_output
+      vars:
+        ansible_command_timeout: 120
 
     - name: Display copy output
       debug:
