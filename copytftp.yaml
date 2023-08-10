@@ -9,14 +9,13 @@
     local_download_path: "/tmp/{{ new_file }}"
 
   tasks:
-    - name: Fetch IOS image from TFTP server
-      fetch:
-        src: "{{ new_image }}"
+    - name: Download IOS image from TFTP server
+      get_url:
+        url: "tftp://{{ tftp_server }}/{{ new_image }}"
         dest: "{{ local_download_path }}"
-        flat: yes
       delegate_to: localhost
 
-    - name: Copy fetched IOS image to target host
+    - name: Copy downloaded IOS image to target host
       copy:
         src: "{{ local_download_path }}"
         dest: "/bootflash/{{ new_file }}"
