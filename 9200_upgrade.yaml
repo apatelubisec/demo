@@ -5,9 +5,6 @@
   vars:
     new_version: 17.09.03
     new_file: "cat9k_lite_iosxe.{{ new_version }}.SPA.bin"
-    ftp_username: cisco
-    ftp_password: cisco123
-    ftp_ip: 10.1.196.117
 
   tasks:
     - name: Gather facts
@@ -52,9 +49,9 @@
       - name: Copy IOS image via FTP
         cisco.ios.ios_command:
           commands:
-            - command: "copy ftp://{{ ftp_username }}:{{ ftp_password }}@{{ ftp_ip }}/{{ new_file }} flash:{{ new_file }}"
+            - command: "copy ftp://cisco:cisco123@10.1.196.117/cat9k_lite_iosxe.17.09.03.SPA.bin flash:cat9k_lite_iosxe.17.09.03.SPA.bin  vrf Mgmt-vrf"
               prompt:
-                - 'Destination filename [{{ new_file }}]?'
+                - 'Destination filename [cat9k_lite_iosxe.17.09.03.SPA.bin]?'
               answer:
                 - "\r"
         vars:
