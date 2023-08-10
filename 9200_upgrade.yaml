@@ -1,12 +1,13 @@
 ---
-- name: 9200 Upgrade
+- name: 9300 Upgrade
   hosts: all
   gather_facts: no
   vars:
-    new_version: "17.09.03"
-    new_file: "cat9k_lite_iosxe.{{ new_version }}.SPA.bin"
-    tftp_server: "10.1.196.117"
-    new_image: "cat9k_lite_iosxe.17.09.03.SPA.bin"
+    new_version: 17.06.05
+    new_file: "cat9k_iosxe.{{ new_version }}.SPA.bin"
+    ftp_username: cisco
+    ftp_password: cisco@123
+    ftp_ip: 10.1.196.117
 
   tasks:
     - name: Gather facts
@@ -14,9 +15,21 @@
         gather_subset: hardware
       register: facts_output
     
-    - name: Print current version
+    - name: print output
       debug:
         msg: "Current Version is {{ facts_output['ansible_facts']['ansible_net_version'] }}"
+    
+    - name: Save the Config
+      cisco.ios.ios_command:
+        commands: 
+          - command: 'copy running-config startup-config'
+            prompt: 'Destination filename \[startup-config\]\?'
+            answer: "\r"
+      register: save_config
+    
+    - name: Save config output
+      debug:
+        msg: "{{ save_config }}"
     
     - name: Start the Upgrade Process
       block:
@@ -36,23 +49,21 @@
         debug:
           msg: "{{ 'No old files found. Nothing to clean.' if 'SUCCESS: No extra package or provisioning files found on media' in install_remove_output.stdout[0] else 'Old files removed successfully.' }}"
       
-      - name: Copy IOS image via TFTP
+      - name: Copy IOS image via FTP
         cisco.ios.ios_command:
           commands:
-            - "copy tftp://{{ tftp_server }}/{{ new_image }} flash:/{{ new_file }}"
-            - "Address or name of remote host []?"
-            - "{{ tftp_server }}"
-            - "Source filename []?"
-            - "{{ new_image }}"
-            - "Destination filename []?"
-            - "{{ new_image }}"
+            - command: "copy ftp://{{ ftp_username }}:{{ ftp_password }}@{{ ftp_ip }}/{{ new_file }} flash:{{ new_file }} vrf Mgmt-vrf"
+              prompt:
+                - 'Destination filename [{{ new_file }}]?'
+              answer:
+                - "\r"
         vars:
-          ansible_command_timeout: 120
+          ansible_command_timeout: 900
       
       - name: Install and activate new IOS image
         cisco.ios.ios_command:
           commands:
-            - command: 'install add file flash:/{{ new_file }} activate commit'
+            - command: 'install add file flash:{{ new_file }} activate commit'
               prompt: 
                 - 'This operation may require a reload of the system. Do you want to proceed\? \[y/n\]'
               answer: 
@@ -75,7 +86,7 @@
           gather_subset: hardware
         register: facts_output_new
       
-      - name: Print upgraded version
+      - name: New Version
         debug:
           msg: "New Version is {{ facts_output_new['ansible_facts']['ansible_net_version'] }}, Upgrade Successfully Completed"
         when: new_version == facts_output_new['ansible_facts']['ansible_net_version']
