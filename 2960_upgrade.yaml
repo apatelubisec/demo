@@ -33,9 +33,9 @@
       - name: Copy IOS image via FTP
         cisco.ios.ios_command:
           commands:
-            - command: "copy ftp://cisco:cisco123@10.1.196.117/cat9k_lite_iosxe.17.09.03.SPA.bin flash:cat9k_lite_iosxe.17.09.03.SPA.bin  vrf Mgmt-vrf"
+            - command: "copy ftp://cisco:cisco123@10.1.196.117/{{ new_file }}  flash:{{ new_file }}   vrf Mgmt-vrf"
               prompt:
-                - 'Destination filename [cat9k_lite_iosxe.17.09.03.SPA.bin]?'
+                - 'Destination filename [{{ new_file }} ]?'
               answer:
                 - "\r"
         vars:
@@ -46,7 +46,7 @@
    - name: Change Boot Variable to new image 
      ios_config: 
        commands: 
-         - "boot system flash:c2960-lanbasek9-mz.122-55.SE12.bin"
+         - "boot system flash:{{ new_file }}"
        save_when: always 
 
 ## Reload the device 
