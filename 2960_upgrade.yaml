@@ -35,8 +35,7 @@
               - 'Destination filename [{{ new_file }} ]?'
             answer:
               - "\r"
-        vars:
-          ansible_command_timeout: 900
+      timeout: 900
 
     - name: Change Boot Variable to new image
       ios_config:
