@@ -41,7 +41,7 @@
 
     - name: Upload CSV file to FTP server
       uri:
-        url: "ftp://cisco:cisco123@10.1.196.117/cisco_info.csv"
+        url: "ftp://cisco:cisco123@10.1.196.117/report/cisco_info.csv"  # Update the URL here
         method: PUT
         body: "{{ lookup('file', '/tmp/cisco_info.csv') }}"
         force_basic_auth: yes
