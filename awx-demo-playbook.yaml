@@ -14,17 +14,17 @@
     - name: Generate formatted output
       debug:
         msg: |
-          Hostname: {{ ansible_net_hostname }}
-          Model: {{ ansible_net_model }}
-          Serial Number: {{ ansible_net_serialnum }}
-          IOS Version: {{ ansible_net_version }}
-          Total Memory: {{ ansible_net_memtotal_mb }} MB
-          Free Memory: {{ ansible_net_memfree_mb }} MB
-          Image: {{ ansible_net_image }}
-          IOStype: {{ ansible_net_iostype }}
-          Operating Mode: {{ ansible_net_operatingmode }}
-          Python Version: {{ ansible_net_python_version }}
-          Stacked Models: {{ ansible_net_stacked_models | join(', ') }}
-          Stacked Serial Numbers: {{ ansible_net_stacked_serialnums | join(', ') }}
-          System: {{ ansible_net_system }}
-          Virtual Switch: {{ ansible_net_virtual_switch }}
+          Hostname:          {{ ansible_net_hostname }}
+          Model:             {{ ansible_net_model }}
+          Serial Number:     {{ ansible_net_serialnum }}
+          IOS Version:       {{ ansible_net_version }}
+          Total Memory:      {{ ansible_net_memtotal_mb }} MB
+          Free Memory:       {{ ansible_net_memfree_mb }} MB
+          Image:             {{ ansible_net_image }}
+          IOStype:           {{ ansible_net_iostype }}
+          Operating Mode:    {{ ansible_net_operatingmode }}
+          Python Version:    {{ ansible_net_python_version }}
+          Stacked Models:    {{ ansible_net_stacked_models | join(', ') }}
+          Stacked Serials:   {{ ansible_net_stacked_serialnums | join(', ') }}
+          System:            {{ ansible_net_system }}
+          Virtual Switch:    {{ ansible_net_virtual_switch }}
