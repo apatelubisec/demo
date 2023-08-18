@@ -1,36 +1,32 @@
 ---
 - name: Gather Cisco Device Facts
   hosts: all
-  gather_facts: no
+  gather_facts: yes
   tasks:
-    - name: Collect Cisco device facts
-      ios_facts:
-        gather_subset: hardware
-      register: cisco_facts
+    - name: Create report file
+      local_action:
+        module: copy
+        content: |
+          Hostname: {{ ansible_net_hostname }}
+          Model: {{ ansible_net_model }}
+          Serial Number: {{ ansible_net_serialnum }}
+          IOS Version: {{ ansible_net_version }}
+          Total Memory: {{ ansible_net_memtotal_mb }} MB
+          Free Memory: {{ ansible_net_memfree_mb }} MB
+          Image: {{ ansible_net_image }}
+          IOStype: {{ ansible_net_iostype }}
+          Operating Mode: {{ ansible_net_operatingmode }}
+          Python Version: {{ ansible_net_python_version }}
+          Stacked Models: {{ ansible_net_stacked_models | join(', ') }}
+          Stacked Serial Numbers: {{ ansible_net_stacked_serialnums | join(', ') }}
+          System: {{ ansible_net_system }}
+          Virtual Switch: {{ ansible_net_virtual_switch }}
+        dest: /tmp/cisco_report.txt
 
-    - name: Create HTML content
-      set_fact:
-        html_content: |
-          <table border="1">
-          <tr><th>Attribute</th><th>Value</th></tr>
-          {% for key, value in cisco_facts.ansible_facts.items() %}
-          <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
-          {% endfor %}
-          </table>
-
-    - name: Create temporary HTML file
-      tempfile:
-        suffix: '.html'
-      register: temp_html_file
-
-    - name: Write HTML content to temporary file
-      copy:
-        dest: "{{ temp_html_file.path }}"
-        content: "{{ html_content }}"
-
-    - name: Upload HTML file to FTP server
-      uri:
-        url: "ftp://cisco:cisco123@10.1.196.117/report/{{ temp_html_file.path | basename }}"
+    - name: Upload report to FTP server
+      ansible.builtin.uri:
+        url: "ftp://cisco:cisco123@10.1.196.117/report/cisco_report.txt"
         method: PUT
-        src: "{{ temp_html_file.path }}"
-      delegate_to: localhost
+        body_format: raw
+        src: "/tmp/cisco_report.txt"
+        status_code: [200]
