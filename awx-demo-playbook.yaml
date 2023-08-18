@@ -29,9 +29,11 @@
           Virtual Switch:    {{ ansible_net_virtual_switch }}
 
     - name: Upload report content to FTP server
-      community.general.uri:
-        url: "ftp://cisco:cisco123@10.1.196.117/report/{{ ansible_net_hostname }}_report.txt"
-        method: PUT
-        body: "{{ report_content }}"
-        return_content: yes
+      ansible.builtin.shell: >
+        echo "{{ report_content }}" | ftp -n 10.1.196.117 <<END_SCRIPT
+        quote USER cisco
+        quote PASS cisco123
+        put - /report/{{ ansible_net_hostname }}_report.txt
+        quit
+        END_SCRIPT
       delegate_to: localhost
