@@ -1,6 +1,6 @@
 ---
 - name: Gather and Upload Cisco Device Information
-  hosts: cisco_devices
+  hosts: all
   gather_facts: no
 
   tasks:
@@ -31,21 +31,20 @@
           Virtual Switch:    {{ ansible_net_virtual_switch }}
 
     - name: Upload report content to FTP server
-      ansible.builtin.script: |
-        import pysftp
+      ansible.builtin.script:
+        script: |
+          import pysftp
+          import io
 
-        # Set up connection details
-        host = "10.1.196.117"
-        username = "cisco"
-        password = "cisco123"
+          # Set up connection details
+          host = "10.1.196.117"
+          username = "cisco"
+          password = "cisco123"
 
-        # Generate report content
-        report_content = """
-          Hostname:          {{ ansible_net_hostname }}
-          Model:             {{ ansible_net_model }}
-          ...
+          # Generate report content
+          report_content = """{{ report_content }}"""
 
-        # Upload report to FTP
-        with pysftp.Connection(host, username=username, password=password) as sftp:
-            sftp.putfo(io.StringIO(report_content), remote_path="/report/{{ ansible_net_hostname }}_report.txt")
+          # Upload report to FTP
+          with pysftp.Connection(host, username=username, password=password) as sftp:
+              sftp.putfo(io.StringIO(report_content), remote_path="/report/{{ ansible_net_hostname }}_report.txt")
       delegate_to: localhost
