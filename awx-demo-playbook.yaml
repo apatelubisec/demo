@@ -1,13 +1,12 @@
 ---
-- name: Gather Cisco Device Facts
+- name: Gather Cisco Device Information
   hosts: all
   gather_facts: yes
   tasks:
-    - name: Create report file
-      local_action:
-        module: copy
-        content: |
-          Hostname: {{ ansible_net_hostname }}
+    - name: Create report content
+      set_fact:
+        report_content: |
+          Hostname: {{ ansible_hostname }}
           Model: {{ ansible_net_model }}
           Serial Number: {{ ansible_net_serialnum }}
           IOS Version: {{ ansible_net_version }}
@@ -21,12 +20,22 @@
           Stacked Serial Numbers: {{ ansible_net_stacked_serialnums | join(', ') }}
           System: {{ ansible_net_system }}
           Virtual Switch: {{ ansible_net_virtual_switch }}
-        dest: /tmp/cisco_report.txt
 
-    - name: Upload report to FTP server
-      ansible.builtin.uri:
-        url: "ftp://cisco:cisco123@10.1.196.117/report/cisco_report.txt"
-        method: PUT
-        body_format: raw
-        src: "/tmp/cisco_report.txt"
-        status_code: [200]
+    - name: Save report to file
+      local_action:
+        module: copy
+        content: "{{ report_content }}"
+        dest: "/tmp/cisco_report.txt"
+
+- name: Run the playbook
+  hosts: localhost
+  tasks:
+    - name: Gather Cisco Device Facts
+      add_host:
+        name: "{{ item }}"
+        groups: cisco_devices
+      loop:
+        - 10.1.196.152  # Replace with your Cisco device IP addresses
+
+    - name: Include the playbook to gather information and create report
+      include: cisco_report.yaml
