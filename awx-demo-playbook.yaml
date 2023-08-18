@@ -1,5 +1,5 @@
 ---
-- name: Gather Cisco Device Information
+- name: Gather and Display Cisco Device Information
   hosts: all
   gather_facts: no
 
@@ -10,22 +10,21 @@
           - config
           - default
           - hardware
-      register: cisco_facts
 
     - name: Generate formatted output
-      set_fact:
-        formatted_output: |
-          Hostname: {{ cisco_facts.ansible_net_hostname }}
-          Model: {{ cisco_facts.ansible_net_model }}
-          Serial Number: {{ cisco_facts.ansible_net_serialnum }}
-          IOS Version: {{ cisco_facts.ansible_net_version }}
-          Total Memory: {{ cisco_facts.ansible_net_memtotal_mb }} MB
-          Free Memory: {{ cisco_facts.ansible_net_memfree_mb }} MB
-          Image: {{ cisco_facts.ansible_net_image }}
-          IOStype: {{ cisco_facts.ansible_net_iostype }}
-          Operating Mode: {{ cisco_facts.ansible_net_operatingmode }}
-          Python Version: {{ cisco_facts.ansible_net_python_version }}
-          Stacked Models: {{ cisco_facts.ansible_net_stacked_models | join(', ') }}
-          Stacked Serial Numbers: {{ cisco_facts.ansible_net_stacked_serialnums | join(', ') }}
-          System: {{ cisco_facts.ansible_net_system }}
-          Virtual Switch: {{ cisco_facts.ansible_net_virtual_switch }}
+      debug:
+        msg: |
+          Hostname: {{ ansible_net_hostname }}
+          Model: {{ ansible_net_model }}
+          Serial Number: {{ ansible_net_serialnum }}
+          IOS Version: {{ ansible_net_version }}
+          Total Memory: {{ ansible_net_memtotal_mb }} MB
+          Free Memory: {{ ansible_net_memfree_mb }} MB
+          Image: {{ ansible_net_image }}
+          IOStype: {{ ansible_net_iostype }}
+          Operating Mode: {{ ansible_net_operatingmode }}
+          Python Version: {{ ansible_net_python_version }}
+          Stacked Models: {{ ansible_net_stacked_models | join(', ') }}
+          Stacked Serial Numbers: {{ ansible_net_stacked_serialnums | join(', ') }}
+          System: {{ ansible_net_system }}
+          Virtual Switch: {{ ansible_net_virtual_switch }}
