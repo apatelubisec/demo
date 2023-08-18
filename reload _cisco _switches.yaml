@@ -1,6 +1,6 @@
 ---
 - name: Reboot Cisco Switches
-  hosts: cisco_switches
+  hosts: all
   gather_facts: no
 
   tasks:
