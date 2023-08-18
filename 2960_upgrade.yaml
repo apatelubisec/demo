@@ -35,7 +35,7 @@
               - 'Destination filename [{{ new_file }} ]?'
             answer:
               - "\r"
-      timeout: 900
+            timeout: 900
 
     - name: Change Boot Variable to new image
       ios_config:
