@@ -1,12 +1,20 @@
 ---
-- name: Gather Cisco Device Facts
-  hosts: all
+- name: Gather Cisco Device Information and Upload Report
+  hosts: cisco_devices
   gather_facts: yes
   tasks:
+    - name: Gather Cisco Device Facts
+      cisco_ios_command:
+        commands:
+          - show version
+          - show inventory
+          - show processes cpu history
+      register: device_info
+
     - name: Create report content
       set_fact:
         report_content: |
-          Hostname: {{ ansible_hostname }}
+          Hostname: {{ ansible_net_hostname }}
           Model: {{ ansible_net_model }}
           Serial Number: {{ ansible_net_serialnum }}
           IOS Version: {{ ansible_net_version }}
@@ -21,13 +29,10 @@
           System: {{ ansible_net_system }}
           Virtual Switch: {{ ansible_net_virtual_switch }}
 
-- name: Upload Report to FTP
-  hosts: localhost
-  gather_facts: no
-  tasks:
     - name: Upload report content to FTP server
       community.general.uri:
-        url: "ftp://cisco:cisco123@10.1.196.117/report/cisco_report.txt"  # Replace with your FTP details
+        url: "ftp://cisco:cisco123@10.1.196.117/report/{{ ansible_net_hostname }}.txt"
         method: PUT
-        body: "{{ hostvars[item].report_content }}"
-      loop: "{{ groups['cisco_devices'] }}"
+        body: "{{ report_content }}"
+        return_content: yes
+      delegate_to: localhost
