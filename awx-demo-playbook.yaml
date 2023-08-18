@@ -1,6 +1,6 @@
 ---
 - name: Gather Cisco Device Information and Upload Report
-  hosts: cisco_devices
+  hosts: all
   gather_facts: yes
   tasks:
     - name: Gather Cisco Device Facts
