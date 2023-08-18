@@ -1,38 +1,51 @@
 ---
-- name: Gather Cisco Device Information and Upload Report
-  hosts: all
-  gather_facts: yes
+- name: Gather and Upload Cisco Device Information
+  hosts: cisco_devices
+  gather_facts: no
+
   tasks:
-    - name: Gather Cisco Device Facts
-      cisco_ios_command:
-        commands:
-          - show version
-          - show inventory
-          - show processes cpu history
+    - name: Gather facts from Cisco devices
+      ios_facts:
+        gather_subset:
+          - config
+          - default
+          - hardware
       register: device_info
 
-    - name: Create report content
+    - name: Generate formatted output
       set_fact:
         report_content: |
-          Hostname: {{ ansible_net_hostname }}
-          Model: {{ ansible_net_model }}
-          Serial Number: {{ ansible_net_serialnum }}
-          IOS Version: {{ ansible_net_version }}
-          Total Memory: {{ ansible_net_memtotal_mb }} MB
-          Free Memory: {{ ansible_net_memfree_mb }} MB
-          Image: {{ ansible_net_image }}
-          IOStype: {{ ansible_net_iostype }}
-          Operating Mode: {{ ansible_net_operatingmode }}
-          Python Version: {{ ansible_net_python_version }}
-          Stacked Models: {{ ansible_net_stacked_models | join(', ') }}
-          Stacked Serial Numbers: {{ ansible_net_stacked_serialnums | join(', ') }}
-          System: {{ ansible_net_system }}
-          Virtual Switch: {{ ansible_net_virtual_switch }}
+          Hostname:          {{ ansible_net_hostname }}
+          Model:             {{ ansible_net_model }}
+          Serial Number:     {{ ansible_net_serialnum }}
+          IOS Version:       {{ ansible_net_version }}
+          Total Memory:      {{ ansible_net_memtotal_mb }} MB
+          Free Memory:       {{ ansible_net_memfree_mb }} MB
+          Image:             {{ ansible_net_image }}
+          IOStype:           {{ ansible_net_iostype }}
+          Operating Mode:    {{ ansible_net_operatingmode }}
+          Python Version:    {{ ansible_net_python_version }}
+          Stacked Models:    {{ ansible_net_stacked_models | join(', ') }}
+          Stacked Serials:   {{ ansible_net_stacked_serialnums | join(', ') }}
+          System:            {{ ansible_net_system }}
+          Virtual Switch:    {{ ansible_net_virtual_switch }}
 
     - name: Upload report content to FTP server
-      community.general.uri:
-        url: "ftp://cisco:cisco123@10.1.196.117/report/{{ ansible_net_hostname }}.txt"
-        method: PUT
-        body: "{{ report_content }}"
-        return_content: yes
+      ansible.builtin.script: |
+        import pysftp
+
+        # Set up connection details
+        host = "10.1.196.117"
+        username = "cisco"
+        password = "cisco123"
+
+        # Generate report content
+        report_content = """
+          Hostname:          {{ ansible_net_hostname }}
+          Model:             {{ ansible_net_model }}
+          ...
+
+        # Upload report to FTP
+        with pysftp.Connection(host, username=username, password=password) as sftp:
+            sftp.putfo(io.StringIO(report_content), remote_path="/report/{{ ansible_net_hostname }}_report.txt")
       delegate_to: localhost
