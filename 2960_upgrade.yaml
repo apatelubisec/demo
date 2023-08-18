@@ -18,9 +18,12 @@
           <tr><th>Attribute</th><th>Value</th></tr>
           <tr><td>Hostname</td><td>{{ ansible_net_hostname }}</td></tr>
           <tr><td>Model</td><td>{{ ansible_net_model }}</td></tr>
-          <tr><td>Serial Number</td><td>{{ ansible_net_serialnum }}</td></tr>
           <!-- ... (other attributes) ... -->
           </table>
+
+    - name: Display generated HTML table
+      debug:
+        var: html_table
 
     - name: Save HTML content to FTP server
       uri:
