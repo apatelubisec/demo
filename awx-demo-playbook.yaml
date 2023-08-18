@@ -1,6 +1,6 @@
 ---
 - name: Gather Cisco Device Facts
-  hosts: cisco_devices
+  hosts: all
   gather_facts: no
   tasks:
     - name: Collect Cisco device facts
