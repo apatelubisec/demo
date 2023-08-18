@@ -1,0 +1,29 @@
+- name: Reload Cisco Switches
+  hosts: all
+  connection: network_cli
+  gather_facts: no
+
+  tasks:
+    - name: Reload the switch
+      cisco.ios.ios_command:
+        commands: 
+          - reload
+        provider: "{{ cli }}"
+      register: reload_output
+
+    - name: Wait for the switch to reload
+      wait_for_connection:
+        delay: 60
+        sleep: 30 
+        timeout: 300
+
+    - name: Check if switch is back online
+      ansible.builtin.ping:
+      register: result
+      until: result is succeeded
+      retries: 60
+      delay: 30
+
+    - name: Print reload results  
+      debug:
+        msg: "{{ reload_output }}"
