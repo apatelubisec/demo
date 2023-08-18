@@ -36,7 +36,7 @@
             answer:
               - "\r"
       vars: 
-           ansible_command_timeout: 600
+        ansible_command_timeout: 600
 
     - name: Change Boot Variable to new image
       ios_config:
@@ -66,5 +66,4 @@
     - name: New Version
       debug:
         msg: "New Version is {{ facts_output_new['ansible_facts']['ansible_net_version'] }}, Upgrade Successfully Completed"
-      when: new_version == facts_output_new['ansible_facts']['ansible_net_version']
-      when: new_version != facts_output['ansible_facts']['ansible_net_version']
+      when: facts_output_new['ansible_facts']['ansible_net_version'] != facts_output['ansible_facts']['ansible_net_version']
