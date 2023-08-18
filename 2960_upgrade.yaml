@@ -1,6 +1,6 @@
 ---
 - name: Gather and Display Cisco Device Information
-  hosts: all
+  hosts: cisco_devices
   gather_facts: no
 
   tasks:
@@ -25,10 +25,14 @@
       debug:
         var: html_table
 
-    - name: Save HTML content to FTP server
+    - name: Download a file from FTP server (as a test)
       uri:
         url: "ftp://cisco:cisco123@10.1.196.117/output.html"
-        method: PUT
-        body: "{{ ansible_facts.html_table }}"
-        force_basic_auth: yes
+        method: GET
+        return_content: yes
+        status_code: 200
       delegate_to: localhost
+      register: ftp_response
+
+    - debug:
+        var: ftp_response.content
