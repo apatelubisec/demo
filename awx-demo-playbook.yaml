@@ -1,48 +1,50 @@
 ---
-- name: Gather and Display Cisco Device Information
-  hosts: all
+- name: Generate and Upload HTML Report
+  hosts: localhost
   gather_facts: no
 
   tasks:
-    - name: Gather facts from Cisco devices
-      ios_facts:
-        gather_subset:
-          - config
-          - default
-          - hardware
-
-    - name: Generate CSV content
+    - name: Generate HTML content
       set_fact:
-        csv_content: |
-          Attribute,Value
-          Hostname,{{ ansible_net_hostname }}
-          Model,{{ ansible_net_model }}
-          Serial Number,{{ ansible_net_serialnum }}
-          IOS Version,{{ ansible_net_version }}
-          Total Memory,{{ ansible_net_memtotal_mb }} MB
-          Free Memory,{{ ansible_net_memfree_mb }} MB
-          Image,{{ ansible_net_image }}
-          IOStype,{{ ansible_net_iostype }}
-          Operating Mode,{{ ansible_net_operatingmode }}
-          Python Version,{{ ansible_net_python_version }}
-          Stacked Models,{{ ansible_net_stacked_models | join(', ') }}
-          Stacked Serials,{{ ansible_net_stacked_serialnums | join(', ') }}
-          System,{{ ansible_net_system }}
-          Virtual Switch,{{ ansible_net_virtual_switch }}
+        html_content: |
+          <table border="1">
+          <tr><th>Attribute</th><th>Value</th></tr>
+          <tr><td>Hostname</td><td>Testing-2960</td></tr>
+          <tr><td>Model</td><td>WS-C2960-8TC-L</td></tr>
+          <tr><td>Serial Number</td><td>FOC1142Z2UB</td></tr>
+          <tr><td>IOS Version</td><td>12.2(55)SE12</td></tr>
+          <tr><td>Total Memory</td><td>21785.671875 MB</td></tr>
+          <tr><td>Free Memory</td><td>7140.7734375 MB</td></tr>
+          <tr><td>Image</td><td>flash:c2960-lanbasek9-mz.122-55.SE12.bin</td></tr>
+          <tr><td>IOStype</td><td>IOS</td></tr>
+          <tr><td>Operating Mode</td><td>autonomous</td></tr>
+          <tr><td>Python Version</td><td>3.9.16</td></tr>
+          <tr><td>Stacked Models</td><td>WS-C2960-8TC-L</td></tr>
+          <tr><td>Stacked Serials</td><td>FOC1142Z2UB</td></tr>
+          <tr><td>System</td><td>ios</td></tr>
+          <tr><td>Virtual Switch</td><td>STACK</td></tr>
+          </table>
 
-    - name: Display generated CSV content
-      debug:
-        var: csv_content
+    - name: Create temporary HTML file locally
+      tempfile:
+        state: file
+        suffix: ".html"
+      register: temp_html_file
 
-    - name: Save CSV content to local file
+    - name: Write HTML content to temporary file
       copy:
-        content: "{{ csv_content }}"
-        dest: "/tmp/cisco_info.csv"
+        dest: "{{ temp_html_file.path }}"
+        content: "{{ html_content }}"
 
-    - name: Upload CSV file to FTP server
+    - name: Upload HTML file to FTP server
       uri:
-        url: "ftp://cisco:cisco123@10.1.196.117/report/cisco_info.csv"  # Update the URL here
+        url: "ftp://cisco:cisco123@10.1.196.117/report/{{ temp_html_file.path | basename }}"
         method: PUT
-        body: "{{ lookup('file', '/tmp/cisco_info.csv') }}"
-        force_basic_auth: yes
+        src: "{{ temp_html_file.path }}"
+      delegate_to: localhost
+
+    - name: Clean up temporary HTML file
+      file:
+        path: "{{ temp_html_file.path }}"
+        state: absent
       delegate_to: localhost
