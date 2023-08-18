@@ -1,34 +1,26 @@
 ---
-- name: Generate and Upload HTML Report
-  hosts: localhost
+- name: Gather Cisco Device Facts
+  hosts: cisco_devices
   gather_facts: no
-
   tasks:
-    - name: Generate HTML content
+    - name: Collect Cisco device facts
+      ios_facts:
+        gather_subset: hardware
+      register: cisco_facts
+
+    - name: Create HTML content
       set_fact:
         html_content: |
           <table border="1">
           <tr><th>Attribute</th><th>Value</th></tr>
-          <tr><td>Hostname</td><td>Testing-2960</td></tr>
-          <tr><td>Model</td><td>WS-C2960-8TC-L</td></tr>
-          <tr><td>Serial Number</td><td>FOC1142Z2UB</td></tr>
-          <tr><td>IOS Version</td><td>12.2(55)SE12</td></tr>
-          <tr><td>Total Memory</td><td>21785.671875 MB</td></tr>
-          <tr><td>Free Memory</td><td>7140.7734375 MB</td></tr>
-          <tr><td>Image</td><td>flash:c2960-lanbasek9-mz.122-55.SE12.bin</td></tr>
-          <tr><td>IOStype</td><td>IOS</td></tr>
-          <tr><td>Operating Mode</td><td>autonomous</td></tr>
-          <tr><td>Python Version</td><td>3.9.16</td></tr>
-          <tr><td>Stacked Models</td><td>WS-C2960-8TC-L</td></tr>
-          <tr><td>Stacked Serials</td><td>FOC1142Z2UB</td></tr>
-          <tr><td>System</td><td>ios</td></tr>
-          <tr><td>Virtual Switch</td><td>STACK</td></tr>
+          {% for key, value in cisco_facts.ansible_facts.items() %}
+          <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+          {% endfor %}
           </table>
 
-    - name: Create temporary HTML file locally
+    - name: Create temporary HTML file
       tempfile:
-        state: file
-        suffix: ".html"
+        suffix: '.html'
       register: temp_html_file
 
     - name: Write HTML content to temporary file
@@ -41,10 +33,4 @@
         url: "ftp://cisco:cisco123@10.1.196.117/report/{{ temp_html_file.path | basename }}"
         method: PUT
         src: "{{ temp_html_file.path }}"
-      delegate_to: localhost
-
-    - name: Clean up temporary HTML file
-      file:
-        path: "{{ temp_html_file.path }}"
-        state: absent
       delegate_to: localhost
