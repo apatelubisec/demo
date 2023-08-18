@@ -1,48 +1,69 @@
 ---
-- name: Gather and Display Cisco Device Information
+- name: 2960 Upgrade
   hosts: all
   gather_facts: no
+  vars:
+    new_file: "c2960-lanbasek9-mz.122-55.SE12.bin"
 
   tasks:
-    - name: Gather facts from Cisco devices
-      ios_facts:
-        gather_subset:
-          - config
-          - default
-          - hardware
+    - name: Gather facts
+      cisco.ios.ios_facts:
+        gather_subset: hardware
+      register: facts_output
 
-    - name: Generate CSV content
-      set_fact:
-        csv_content: |
-          Attribute,Value
-          Hostname,{{ ansible_net_hostname }}
-          Model,{{ ansible_net_model }}
-          Serial Number,{{ ansible_net_serialnum }}
-          IOS Version,{{ ansible_net_version }}
-          Total Memory,{{ ansible_net_memtotal_mb }} MB
-          Free Memory,{{ ansible_net_memfree_mb }} MB
-          Image,{{ ansible_net_image }}
-          IOStype,{{ ansible_net_iostype }}
-          Operating Mode,{{ ansible_net_operatingmode }}
-          Python Version,{{ ansible_net_python_version }}
-          Stacked Models,{{ ansible_net_stacked_models | join(', ') }}
-          Stacked Serials,{{ ansible_net_stacked_serialnums | join(', ') }}
-          System,{{ ansible_net_system }}
-          Virtual Switch,{{ ansible_net_virtual_switch }}
-
-    - name: Display generated CSV content
+    - name: print output
       debug:
-        var: csv_content
+        msg: "Current Version is {{ facts_output['ansible_facts']['ansible_net_version'] }}"
 
-    - name: Save CSV content to local file
-      copy:
-        content: "{{ csv_content }}"
-        dest: "/tmp/cisco_info.csv"
+    - name: Save the Config
+      cisco.ios.ios_command:
+        commands:
+          - command: 'copy running-config startup-config'
+            prompt: 'Destination filename \[startup-config\]\?'
+            answer: "\r"
+      register: save_config
 
-    - name: Upload CSV file to FTP server
-      uri:
-        url: "ftp://cisco:cisco123@10.1.196.117/cisco_info.csv"
-        method: PUT
-        body: "{{ lookup('file', '/tmp/cisco_info.csv') }}"
-        force_basic_auth: yes
-      delegate_to: localhost
+    - name: Save config output
+      debug:
+        msg: "{{ save_config }}"
+
+    - name: Copy IOS image via FTP
+      cisco.ios.ios_command:
+        commands:
+          - command: "copy ftp://cisco:cisco123@10.1.196.117/{{ new_file }}  flash:{{ new_file }}"
+            prompt:
+              - 'Destination filename [{{ new_file }} ]?'
+            answer:
+              - "\r"
+      vars: 
+        ansible_command_timeout: 600
+
+    - name: Change Boot Variable to new image
+      ios_config:
+        commands:
+          - "boot system flash:{{ new_file }}"
+        save_when: always
+
+    - name: Reload the Device
+      cli_command:
+        command: reload
+        prompt:
+          - confirm
+        answer:
+          - 'y'
+
+    - name: Wait for switch to reboot and become reachable
+      wait_for_connection:
+        delay: 180
+        sleep: 60
+        timeout: 900
+
+    - name: Gather new facts
+      cisco.ios.ios_facts:
+        gather_subset: hardware
+      register: facts_output_new
+
+    - name: New Version
+      debug:
+        msg: "New Version is {{ facts_output_new['ansible_facts']['ansible_net_version'] }}, Upgrade Successfully Completed"
+      when: facts_output_new['ansible_facts']['ansible_net_version'] != facts_output['ansible_facts']['ansible_net_version']
