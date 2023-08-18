@@ -1,12 +1,11 @@
 ---
 - name: Reboot Cisco Switches
-  hosts: all
+  hosts: cisco_switches
   gather_facts: no
 
   tasks:
     - name: Reboot the Cisco switch
       ios_command:
-        provider: "{{ cli }}"
         commands:
           - reload
         wait_for: rebooted
