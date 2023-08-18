@@ -1,16 +1,28 @@
 ---
 - name: Gather Cisco Device Information
-  hosts: all
+  hosts: cisco_devices
   gather_facts: no
 
   tasks:
     - name: Gather facts from Cisco devices
       ios_facts:
         gather_subset:
-          - hardware
           - config
+          - default
+          - hardware
       register: cisco_facts
 
-    - name: Print Cisco device information
-      debug:
-        var: cisco_facts
+    - name: Generate formatted output
+      set_fact:
+        formatted_output: |
+          Hostname: {{ cisco_facts.ansible_net_hostname }}
+          Model: {{ cisco_facts.ansible_net_model }}
+          Serial Number: {{ cisco_facts.ansible_net_serialnum }}
+          IOS Version: {{ cisco_facts.ansible_net_version }}
+          Total Memory: {{ cisco_facts.ansible_net_memtotal_mb }} MB
+          Free Memory: {{ cisco_facts.ansible_net_memfree_mb }} MB
+          Image: {{ cisco_facts.ansible_net_image }}
+          Filesystem Info:
+            - Filesystem: {{ cisco_facts.ansible_net_filesystems[0] }}
+              Total Space: {{ cisco_facts.ansible_net_filesystems_info[cisco_facts.ansible_net_filesystems[0]].spacetotal_kb }} KB
+              Free Space: {{ cisco_facts.ansible_net_filesystems_info[cisco_facts.ansible_net_filesystems[0]].spacefree_kb }} KB
