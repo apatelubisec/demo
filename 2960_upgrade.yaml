@@ -1,6 +1,6 @@
 ---
 - name: Gather and Display Cisco Device Information
-  hosts: cisco_devices
+  hosts: all
   gather_facts: no
 
   tasks:
@@ -11,28 +11,38 @@
           - default
           - hardware
 
-    - name: Generate HTML table
+    - name: Generate CSV content
       set_fact:
-        html_table: |
-          <table border="1">
-          <tr><th>Attribute</th><th>Value</th></tr>
-          <tr><td>Hostname</td><td>{{ ansible_net_hostname }}</td></tr>
-          <tr><td>Model</td><td>{{ ansible_net_model }}</td></tr>
-          <!-- ... (other attributes) ... -->
-          </table>
+        csv_content: |
+          Attribute,Value
+          Hostname,{{ ansible_net_hostname }}
+          Model,{{ ansible_net_model }}
+          Serial Number,{{ ansible_net_serialnum }}
+          IOS Version,{{ ansible_net_version }}
+          Total Memory,{{ ansible_net_memtotal_mb }} MB
+          Free Memory,{{ ansible_net_memfree_mb }} MB
+          Image,{{ ansible_net_image }}
+          IOStype,{{ ansible_net_iostype }}
+          Operating Mode,{{ ansible_net_operatingmode }}
+          Python Version,{{ ansible_net_python_version }}
+          Stacked Models,{{ ansible_net_stacked_models | join(', ') }}
+          Stacked Serials,{{ ansible_net_stacked_serialnums | join(', ') }}
+          System,{{ ansible_net_system }}
+          Virtual Switch,{{ ansible_net_virtual_switch }}
 
-    - name: Display generated HTML table
+    - name: Display generated CSV content
       debug:
-        var: html_table
+        var: csv_content
 
-    - name: Download a file from FTP server (as a test)
+    - name: Save CSV content to local file
+      copy:
+        content: "{{ csv_content }}"
+        dest: "/tmp/cisco_info.csv"
+
+    - name: Upload CSV file to FTP server
       uri:
-        url: "ftp://cisco:cisco123@10.1.196.117/output.html"
-        method: GET
-        return_content: yes
-        status_code: 200
+        url: "ftp://cisco:cisco123@10.1.196.117/cisco_info.csv"
+        method: PUT
+        body: "{{ lookup('file', '/tmp/cisco_info.csv') }}"
+        force_basic_auth: yes
       delegate_to: localhost
-      register: ftp_response
-
-    - debug:
-        var: ftp_response.content
