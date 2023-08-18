@@ -1,34 +1,7 @@
 ---
-- name: Gather Cisco Device Information
+- name: Gather Cisco Device Facts and Upload Report
   hosts: all
-  gather_facts: yes
-  tasks:
-    - name: Create report content
-      set_fact:
-        report_content: |
-          Hostname: {{ ansible_hostname }}
-          Model: {{ ansible_net_model }}
-          Serial Number: {{ ansible_net_serialnum }}
-          IOS Version: {{ ansible_net_version }}
-          Total Memory: {{ ansible_net_memtotal_mb }} MB
-          Free Memory: {{ ansible_net_memfree_mb }} MB
-          Image: {{ ansible_net_image }}
-          IOStype: {{ ansible_net_iostype }}
-          Operating Mode: {{ ansible_net_operatingmode }}
-          Python Version: {{ ansible_net_python_version }}
-          Stacked Models: {{ ansible_net_stacked_models | join(', ') }}
-          Stacked Serial Numbers: {{ ansible_net_stacked_serialnums | join(', ') }}
-          System: {{ ansible_net_system }}
-          Virtual Switch: {{ ansible_net_virtual_switch }}
-
-    - name: Save report to file
-      local_action:
-        module: copy
-        content: "{{ report_content }}"
-        dest: "/tmp/cisco_report.txt"
-
-- name: Run the playbook
-  hosts: localhost
+  gather_facts: no
   tasks:
     - name: Gather Cisco Device Facts
       add_host:
@@ -37,5 +10,36 @@
       loop:
         - 10.1.196.152  # Replace with your Cisco device IP addresses
 
-    - name: Include the playbook to gather information and create report
-      include: cisco_report.yaml
+    - name: Gather Cisco Device Information
+      hosts: cisco_devices
+      gather_facts: yes
+      tasks:
+        - name: Create report content
+          set_fact:
+            report_content: |
+              Hostname: {{ ansible_hostname }}
+              Model: {{ ansible_net_model }}
+              Serial Number: {{ ansible_net_serialnum }}
+              IOS Version: {{ ansible_net_version }}
+              Total Memory: {{ ansible_net_memtotal_mb }} MB
+              Free Memory: {{ ansible_net_memfree_mb }} MB
+              Image: {{ ansible_net_image }}
+              IOStype: {{ ansible_net_iostype }}
+              Operating Mode: {{ ansible_net_operatingmode }}
+              Python Version: {{ ansible_net_python_version }}
+              Stacked Models: {{ ansible_net_stacked_models | join(', ') }}
+              Stacked Serial Numbers: {{ ansible_net_stacked_serialnums | join(', ') }}
+              System: {{ ansible_net_system }}
+              Virtual Switch: {{ ansible_net_virtual_switch }}
+
+        - name: Upload report content to FTP server
+          community.general.uri:
+            url: "ftp://cisco:cisco123@10.1.196.117/report/cisco_report.txt"  # Replace with your FTP details
+            method: PUT
+            body: "{{ report_content }}"
+            return_content: yes
+          register: upload_result
+
+        - name: Display upload result
+          debug:
+            var: upload_result
