@@ -22,7 +22,10 @@
           Total Memory: {{ cisco_facts.ansible_net_memtotal_mb }} MB
           Free Memory: {{ cisco_facts.ansible_net_memfree_mb }} MB
           Image: {{ cisco_facts.ansible_net_image }}
-          Filesystem Info:
-            - Filesystem: {{ cisco_facts.ansible_net_filesystems[0] }}
-              Total Space: {{ cisco_facts.ansible_net_filesystems_info[cisco_facts.ansible_net_filesystems[0]].spacetotal_kb }} KB
-              Free Space: {{ cisco_facts.ansible_net_filesystems_info[cisco_facts.ansible_net_filesystems[0]].spacefree_kb }} KB
+          IOStype: {{ cisco_facts.ansible_net_iostype }}
+          Operating Mode: {{ cisco_facts.ansible_net_operatingmode }}
+          Python Version: {{ cisco_facts.ansible_net_python_version }}
+          Stacked Models: {{ cisco_facts.ansible_net_stacked_models | join(', ') }}
+          Stacked Serial Numbers: {{ cisco_facts.ansible_net_stacked_serialnums | join(', ') }}
+          System: {{ cisco_facts.ansible_net_system }}
+          Virtual Switch: {{ cisco_facts.ansible_net_virtual_switch }}
