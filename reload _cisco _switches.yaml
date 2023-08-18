@@ -8,10 +8,20 @@
       ios_command:
         commands:
           - reload
-        wait_for: rebooted
-        wait_for_timeout: 600
-      register: reboot_result
 
-    - name: Print reboot result
+    - name: Wait for the switch to reboot
+      wait_for:
+        host: "{{ inventory_hostname }}"
+        port: 22
+        state: started
+        delay: 30
+        timeout: 600
+
+    - name: Verify switch version
+      ios_facts:
+        gather_subset: hardware
+      register: switch_facts
+
+    - name: Print switch version
       debug:
-        var: reboot_result
+        var: switch_facts.ansible_net_version
