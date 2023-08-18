@@ -1,6 +1,5 @@
 - name: Reload Cisco Switches
   hosts: all
-  connection: network_cli
   gather_facts: no
 
   tasks:
