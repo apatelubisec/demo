@@ -1,8 +1,7 @@
 ---
-- name: Gather and Display Cisco Device Information
+- name: Gather and Upload Cisco Device Information
   hosts: all
   gather_facts: no
-
   tasks:
     - name: Gather facts from Cisco devices
       ios_facts:
@@ -11,7 +10,7 @@
           - default
           - hardware
 
-    - name: Generate formatted output
+    - name: Generate report content
       set_fact:
         report_content: |
           Hostname:          {{ ansible_net_hostname }}
@@ -29,12 +28,10 @@
           System:            {{ ansible_net_system }}
           Virtual Switch:    {{ ansible_net_virtual_switch }}
 
-    - name: Save report content to local file
-      copy:
-        content: "{{ report_content }}"
-        dest: /path/to/local/report.txt
-      delegate_to: localhost
-
     - name: Upload report content to FTP server
-      shell: "curl -T /path/to/local/report.txt ftp://cisco:cisco123@10.1.196.117/report/{{ ansible_net_hostname }}_report.txt"
+      community.general.uri:
+        url: "ftp://cisco:cisco123@10.1.196.117/report/{{ ansible_net_hostname }}_report.txt"
+        method: PUT
+        body: "{{ report_content }}"
+        return_content: yes
       delegate_to: localhost
