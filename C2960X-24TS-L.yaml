@@ -29,14 +29,15 @@
 
     - name: Copy IOS image via FTP
       cisco.ios.ios_command:
-        commands:
-          - command: "copy ftp://cisco:cisco123@10.1.196.117/{{ new_file }}  flash:{{ new_file }}"
-            prompt:
-              - 'Destination filename [{{ new_file }} ]?'
-            answer:
-              - "\r"
+      commands:
+      - command: "copy ftp://cisco:cisco123@10.1.196.117/{{ new_file }}  flash:{{ new_file }}"
+        prompt:
+          - 'Destination filename \[\[{{ new_file }} \]\]?'
+        answer:
+          - "\r"
       vars: 
-        ansible_command_timeout: 600
+      ansible_command_timeout: 600
+
 
     - name: Change Boot Variable to new image
       ios_config:
