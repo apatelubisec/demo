@@ -37,7 +37,7 @@
             answer:
               - "\r"
       vars: 
-        ansible_command_timeout: 600
+        ansible_command_timeout: 1200
 
     - name: Change Boot Variable to new image
       ios_config:
