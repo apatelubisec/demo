@@ -3,7 +3,7 @@
   hosts: all
   gather_facts: no
   vars:
-    new_file: "c2960x-universalk9-mz.152-7.E7.bin"
+    new_file: "c2960-lanbasek9-mz.152-7.E7.bin"
     new_version: "15.2(7)E7"  # Change this to the actual new version
 
   tasks:
