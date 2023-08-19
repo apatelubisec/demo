@@ -4,6 +4,7 @@
   gather_facts: no
   vars:
     new_file: "c2960x-universalk9-mz.152-7.E7.bin"
+    new_version: "15.2(7)E7"  # Change this to the actual new version
 
   tasks:
     - name: Gather facts
@@ -67,4 +68,3 @@
       debug:
         msg: "New Version is {{ facts_output_new['ansible_facts']['ansible_net_version'] }}, Upgrade Successfully Completed"
       when: new_version == facts_output_new['ansible_facts']['ansible_net_version']
-      when: new_version != facts_output['ansible_facts']['ansible_net_version']
