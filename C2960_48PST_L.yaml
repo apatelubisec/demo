@@ -3,7 +3,7 @@
   hosts: all
   gather_facts: no
   vars:
-    new_file: "c2960-lanbasek9-mz.122-55.SE12.bin"
+    new_file: "c2960-lanbasek9-mz.152-7.E8.bin"
 
   tasks:
     - name: Gather facts
