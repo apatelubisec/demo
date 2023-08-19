@@ -32,11 +32,11 @@
         commands:
           - command: "copy ftp://cisco:cisco123@10.1.196.117/{{ new_file }}  flash:{{ new_file }}"
             prompt:
-              - 'Destination filename \[\[{{ new_file }} \]\]?'
+              - 'Destination filename [{{ new_file }} ]?'
             answer:
               - "\r"
       vars: 
-        ansible_command_timeout: 600
+           ansible_command_timeout: 600
 
     - name: Change Boot Variable to new image
       ios_config:
@@ -66,4 +66,5 @@
     - name: New Version
       debug:
         msg: "New Version is {{ facts_output_new['ansible_facts']['ansible_net_version'] }}, Upgrade Successfully Completed"
-      when: facts_output_new['ansible_facts']['ansible_net_version'] != facts_output['ansible_facts']['ansible_net_version']
+      when: new_version == facts_output_new['ansible_facts']['ansible_net_version']
+      when: new_version != facts_output['ansible_facts']['ansible_net_version']
