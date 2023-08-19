@@ -3,7 +3,8 @@
   hosts: all
   gather_facts: no
   vars:
-    new_file: "c2960-lanbasek9-mz.152-7.E8.bin"
+    new_file: "c2960x-universalk9-mz.152-7.E7.bin"
+    new_version: "15.2(7)E7"  # Change this to the actual new version
 
   tasks:
     - name: Gather facts
@@ -32,7 +33,7 @@
         commands:
           - command: "copy ftp://cisco:cisco123@10.1.196.117/{{ new_file }}  flash:{{ new_file }}"
             prompt:
-              - 'Destination filename [{{ new_file }} ]?'
+              - 'Destination filename \[.*\]?'
             answer:
               - "\r"
       vars: 
@@ -66,4 +67,4 @@
     - name: New Version
       debug:
         msg: "New Version is {{ facts_output_new['ansible_facts']['ansible_net_version'] }}, Upgrade Successfully Completed"
-      when: facts_output_new['ansible_facts']['ansible_net_version'] != facts_output['ansible_facts']['ansible_net_version']
+      when: new_version == facts_output_new['ansible_facts']['ansible_net_version']
