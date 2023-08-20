@@ -24,6 +24,9 @@
             answer: "\r"
       register: save_config
 
+      vars: 
+        ansible_command_timeout: 300
+
     - name: Save config output
       debug:
         msg: "{{ save_config }}"
