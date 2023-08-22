@@ -3,37 +3,20 @@
   hosts: all
   gather_facts: no
   tasks:
-    - name: Gather facts from Cisco devices
+    - name: Gather facts from Cisco device
       ios_facts:
-        gather_subset:
-          - config
-          - default
-          - hardware
+        gather_subset: all
+      register: device_facts
 
-    - name: Generate report content
-      set_fact:
-        report_content: |
-          Hostname:          {{ ansible_net_hostname }}
-          Model:             {{ ansible_net_model }}
-          Serial Number:     {{ ansible_net_serialnum }}
-          IOS Version:       {{ ansible_net_version }}
-          Total Memory:      {{ ansible_net_memtotal_mb }} MB
-          Free Memory:       {{ ansible_net_memfree_mb }} MB
-          Image:             {{ ansible_net_image }}
-          IOStype:           {{ ansible_net_iostype }}
-          Operating Mode:    {{ ansible_net_operatingmode }}
-          Python Version:    {{ ansible_net_python_version }}
-          Stacked Models:    {{ ansible_net_stacked_models | join(', ') }}
-          Stacked Serials:   {{ ansible_net_stacked_serialnums | join(', ') }}
-          System:            {{ ansible_net_system }}
-          Virtual Switch:    {{ ansible_net_virtual_switch }}
+    - name: Write facts to a temporary file on target host
+      copy:
+        content: "{{ device_facts | to_nice_json }}"
+        dest: "/tmp/{{ inventory_hostname }}_facts.json"
 
-    - name: Upload report content to FTP server
-      ansible.builtin.shell: >
-        echo "{{ report_content }}" | ftp -n 10.1.196.117 <<END_SCRIPT
-        quote USER cisco
-        quote PASS cisco123
-        put - /report/{{ ansible_net_hostname }}_report.txt
-        quit
-        END_SCRIPT
-      delegate_to: localhost
+    - name: Upload facts to FTP Server
+      expect:
+        command: "ftp -n 10.1.196.117"
+        responses:
+          "(?i)Name .*:": "cisco"
+          "(?i)Password .*:": "cisco123"
+          "(?i)ftp>": "put /tmp/{{ inventory_hostname }}_facts.json"
