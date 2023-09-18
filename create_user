@@ -1,0 +1,17 @@
+---
+- name: Configure Cisco Device
+  hosts: your_cisco_device
+  gather_facts: no
+  tasks:
+    - name: Configure username with privilege 15 and secret password
+      ios_command:
+        commands:
+          - username acpadmin privilege 15 secret cx7e#EBir
+      register: command_output
+
+    - name: Save configuration
+      ios_command:
+        commands:
+          - write memory
+      when: "'Write memory' in command_output.stdout_lines[0]"
+
