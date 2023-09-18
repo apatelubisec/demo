@@ -1,6 +1,6 @@
 ---
 - name: Configure Cisco Device
-  hosts: your_cisco_device
+  hosts: all
   gather_facts: no
   tasks:
     - name: Configure username with privilege 15 and secret password
