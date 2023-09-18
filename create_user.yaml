@@ -1,17 +1,16 @@
 ---
-- name: Configure Cisco Device
+- name: Create New User and Save Config on Cisco Device
   hosts: all
   gather_facts: no
   tasks:
-    - name: Configure username with privilege 15 and secret password
-      ios_command:
-        commands:
-          - username acpadmin privilege 15 secret cx7e#EBir
-      register: command_output
+    - name: Configure new user
+      ios_config:
+        lines:
+          - username "{{ cisco_username }}" privilege 15 secret "{{ cisco_password }}"
+      register: config_output
 
     - name: Save configuration
       ios_command:
         commands:
           - write memory
-      when: "'Write memory' in command_output.stdout_lines[0]"
-
+      when: config_output.changed
